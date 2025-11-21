@@ -1,0 +1,40 @@
+{% extends "admin/layout.html" %}
+{% from '_form_helpers.html' import render_field %}
+
+{% block admin_content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">{{ title }}</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.cursos') }}">Cursos</a></li>
+        <li class="breadcrumb-item active">{{ 'Editar' if curso else 'Nuevo' }}</li>
+    </ol>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-edit me-1"></i>
+            Formulario de Curso
+        </div>
+        <div class="card-body">
+            <form method="POST" novalidate>
+                {{ form.hidden_tag() }}
+
+                {{ render_field(form.nombre) }}
+                {{ render_field(form.duracion) }}
+                {{ render_field(form.texto_corto, rows=3) }}
+                {{ render_field(form.descripcion, rows=8) }}
+                {{ render_field(form.temario, rows=10) }}
+                <div class="form-text mb-3">
+                    El temario debe estar en formato JSON. Puedes usar un validador online para asegurarte de que es correcto.
+                </div>
+                {{ render_field(form.footer, rows=5) }}
+
+                <div class="d-flex justify-content-end">
+                    <a href="{{ url_for('admin.cursos') }}" class="btn btn-secondary me-2">Cancelar</a>
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

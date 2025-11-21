@@ -1,0 +1,26 @@
+<div data-tab="pagos" id="pagos">
+    <div id="div_pagos">
+        {% if grupo %}
+            {% if current_user.is_authenticated %}
+                <div id="caja_precios">
+                    {% if current_user.es_miembro_activo %}
+                        <p class="resalte_navy">Precio especial por ser <b>miembro</b></p>
+                        <p class="pagos normal"><span>$</span><span>{{ "%.2f"|format(grupo.precio_miembro) }}</span></p>
+                    {% else %}
+                        <p class="pagos normal"><span>$</span><span>{{ "%.2f"|format(grupo.precio_usuario) }}</span></p>
+                    {% endif %}
+                    <p><a href="#" class="boton">Inscribirse</a></p>
+                </div>
+            {% else %}
+                <div class="boxlogin">
+                    <h4>Inicia sesión para inscribirte</h4>
+                    <p>Para poder inscribirte a este curso, primero necesitas iniciar sesión o crear una cuenta.</p>
+                    <a href="{{ url_for('auth.login', next=request.url) }}" class="boton">Iniciar Sesión</a>
+                    <a href="{{ url_for('auth.register') }}" class="link">Crear cuenta</a>
+                </div>
+            {% endif %}
+        {% else %}
+            <p>La inscripción no está disponible ya que no hay grupos programados.</p>
+        {% endif %}
+    </div>
+</div>

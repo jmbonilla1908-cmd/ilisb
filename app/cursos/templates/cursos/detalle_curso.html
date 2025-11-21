@@ -1,0 +1,66 @@
+{% extends "htmx_base.html" if htmx else "base.html" %}
+
+{% block content %}
+<div class="section" id="curso" hx-headers='{"X-CSRFToken": "{{ csrf_token() }}"}'>
+    {# El hx-headers es una buena práctica para enviar el token CSRF en las peticiones HTMX #}
+
+    <div class="banner2">
+        <div class="fake_celeste"></div>
+        <div class="contenido fotocover" style="background-image: url({{ url_for('static', filename='img/cursos/' + (curso.banner or 'curso_default.jpg')) }});">
+            <div class="mascara"></div>
+            <div class="titulo">
+                <div>
+                    <h1 class="nombre_cursò">{{ curso.nombre }}</h1>
+                    <a href="#pagos-tab" class="boton scroll" target="_self">Quiero este curso</a>
+                </div>
+            </div>
+        </div>
+        <div class="fake_blue"></div>
+    </div>
+
+    <div class="content autoheight">
+        <div class="wrapper">
+            <div class="contenido_curso">
+
+                {# --- NAVEGACIÓN DE PESTAÑAS --- #}
+                <div id="selector" hx-target="#tab-content" hx-swap="innerHTML">
+                    <a href="#" hx-get="{{ url_for('cursos.curso_tab', slug=curso.slug, tab='overview') }}" class="selected" hx-trigger="load, click">OVERVIEW</a>
+                    <a href="#" hx-get="{{ url_for('cursos.curso_tab', slug=curso.slug, tab='contenido') }}">CONTENIDO</a>
+                    <a href="#" hx-get="{{ url_for('cursos.curso_tab', slug=curso.slug, tab='instructor') }}">INSTRUCTOR</a>
+                    <a href="#" hx-get="{{ url_for('cursos.curso_tab', slug=curso.slug, tab='horarios') }}">HORARIOS</a>
+                    <a href="#" hx-get="{{ url_for('cursos.curso_tab', slug=curso.slug, tab='pagos') }}" id="pagos-tab">PAGOS</a>
+                </div>
+
+                <div id="contenido_detalle" class="sombra">
+                    {# El contenido de la pestaña se cargará aquí dinámicamente #}
+                    <div id="tab-content">
+                        {# Indicador de carga inicial #}
+                        <div class="htmx-indicator">Cargando...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{# Ya no necesitamos nervsoft3.js para las pestañas, HTMX se encarga.
+   Este script maneja la clase 'selected' en las pestañas. #}
+<script>
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+        // Solo actuar si el swap ocurrió dentro de nuestro contenedor de pestañas
+        if (evt.detail.target.id === 'tab-content') {
+            // Elimina la clase 'selected' de todas las pestañas
+            document.querySelectorAll('#selector a').forEach(function(tab) {
+                tab.classList.remove('selected');
+            });
+            // Agrega la clase 'selected' a la pestaña que disparó el evento
+            if (evt.detail.requestConfig.elt) {
+                evt.detail.requestConfig.elt.classList.add('selected');
+            }
+        }
+    });
+</script>
+{% endblock %}

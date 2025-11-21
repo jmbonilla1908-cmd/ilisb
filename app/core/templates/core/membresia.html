@@ -1,0 +1,140 @@
+{% extends "htmx_base.html" if htmx else "base.html" %}
+
+{% block content %}
+
+{# --- Carrusel de Banners --- #}
+<div id="bannerCarousel" class="carousel slide mb-5" data-bs-ride="carousel">
+    <div class="carousel-inner">
+        {% if current_user.is_authenticated and current_user.es_miembro_activo %}
+            <div class="carousel-item active">
+                <img src="{{ url_for('static', filename='img/membresia/banner_member_1.jpg') }}" class="d-block w-100" alt="Banner 1">
+                <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 p-3 rounded">
+                    <h5>¡Bienvenido a la membresía Premium de ILISB!</h5>
+                    <p>Como miembro privilegiado, tienes acceso a un completo itinerario de capacitación, herramientas avanzadas y formularios diseñados para que tu labor sea siempre profesional.</p>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img src="{{ url_for('static', filename='img/membresia/banner_member_2_B.jpg') }}" class="d-block w-100" alt="Banner 2">
+                <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 p-3 rounded">
+                    <h5>En Constante Evolución</h5>
+                    <p>Mejoramos y actualizamos continuamente nuestros aplicativos y cursos, integrando innovaciones que elevarán tu competencia profesional a nuevos horizontes.</p>
+                </div>
+            </div>
+        {% elif current_user.is_authenticated %}
+            <div class="carousel-item active">
+                <img src="{{ url_for('static', filename='img/membresia/banner_member_1.jpg') }}" class="d-block w-100" alt="Banner 1">
+                <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 p-3 rounded">
+                    <h5>¡A un paso de ser Premium!</h5>
+                    <p>Tu registro en ILISB ha sido exitoso. Ahora estás a solo un paso de disfrutar la gama completa de ventajas que ofrece nuestra membresía Premium.</p>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img src="{{ url_for('static', filename='img/membresia/banner_member_2_B.jpg') }}" class="d-block w-100" alt="Banner 2">
+                <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 p-3 rounded">
+                    <h5>Certifícate con Nosotros</h5>
+                    <p>Obtén respaldo académico de ILISB para ofrecer servicios de consultoría y soporte técnico, resolviendo desafíos en sistemas de bombeo.</p>
+                </div>
+            </div>
+        {% else %}
+            <div class="carousel-item active">
+                <img src="{{ url_for('static', filename='img/membresia/banner_member_1.jpg') }}" class="d-block w-100" alt="Banner 1">
+                <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 p-3 rounded">
+                    <h5>Capacitación y Perfeccionamiento Profesional</h5>
+                    <p>Únete a la comunidad de profesionales en bombas más exclusiva de América Latina y El Caribe y descubre todas las ventajas que hemos preparado para ti.</p>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img src="{{ url_for('static', filename='img/membresia/banner_member_2_B.jpg') }}" class="d-block w-100" alt="Banner 2">
+                <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 p-3 rounded">
+                    <h5>Respaldo Académico</h5>
+                    <p>Nuestros profesionales certificados por ILISB gozan del respaldo necesario para ofrecer servicios de consultoría y soporte técnico.</p>
+                </div>
+            </div>
+        {% endif %}
+        <div class="carousel-item">
+            <img src="{{ url_for('static', filename='img/membresia/banner_member_3_B.jpg') }}" class="d-block w-100" alt="Banner 3">
+            <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 p-3 rounded">
+                <h5>Soluciones Integrales</h5>
+                <p>ILISB proporciona un enfoque integral para abordar desafíos y necesidades, ofreciendo soluciones eficientes y confiables a profesionales en el campo.</p>
+            </div>
+        </div>
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#bannerCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#bannerCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+    </button>
+</div>
+
+<div class="row">
+    {# --- Columna de Beneficios --- #}
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="card-title">Beneficios de la Membresía</h2>
+                <p class="text-muted">Descubre todo lo que ILISB tiene para ofrecerte.</p>
+                <div class="accordion" id="accordionBeneficios">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingOne">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+                                <strong>Capacitación y Descuentos Exclusivos</strong>
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionBeneficios">
+                            <div class="accordion-body">
+                                Accede a descuentos exclusivos en los cursos y certificaciones que validarán tus conocimientos, mejorando tu perfil profesional en el competitivo campo de los sistemas de bombeo.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingTwo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                                <strong>Herramientas y Aplicativos Pro</strong>
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionBeneficios">
+                            <div class="accordion-body">
+                                Utiliza herramientas de cálculo y simulación exclusivas para miembros. Optimiza tus diseños, soluciona problemas complejos con precisión y mantente a la vanguardia con notificaciones anticipadas sobre nuevos aplicativos y mejoras.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingThree">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+                                <strong>Networking y Comunidad</strong>
+                            </button>
+                        </h2>
+                        <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionBeneficios">
+                            <div class="accordion-body">
+                                Conéctate con otros profesionales destacados, participa en foros y conferencias internacionales, y establece relaciones comerciales que impulsen tu carrera. Aumenta tu reconocimiento y reputación al formar parte de una comunidad selecta.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% if current_user.is_authenticated and not current_user.es_miembro_activo %}
+                    <a href="#" class="btn btn-primary mt-3">¡Quiero ser miembro ahora!</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {# --- Columna de Login / Estado de Membresía --- #}
+    <div class="col-lg-4">
+        {% if current_user.is_authenticated and current_user.es_miembro_activo %}
+            <div class="card text-center border-success">
+                <div class="card-body">
+                    <h5 class="card-title">¡Ya eres Miembro Premium!</h5>
+                    <p class="card-text">Hola, {{ current_user.nombre }}. Gracias por ser parte de ILISB. Aprovecha al máximo todos tus beneficios.</p>
+                    <a href="#" class="btn btn-success">Ir a mis Aplicativos Pro</a>
+                </div>
+            </div>
+        {% elif not current_user.is_authenticated %}
+            {% include 'auth/_login_form.html' %}
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

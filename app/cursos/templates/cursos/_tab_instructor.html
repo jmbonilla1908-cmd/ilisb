@@ -1,0 +1,15 @@
+<div data-tab="instructor">
+    {% if grupo and grupo.docente %}
+    <div>
+        <img src="{{ url_for('static', filename='img/instructores/' + grupo.docente.imagen) }}">
+    </div>
+    <div>
+        <p>{{ grupo.docente.nombre }}</p>
+        <p>{{ grupo.docente.cargo }}</p>
+        <p>Instituto Latinoamericano de Ingeniería en Sistemas de Bombeo - ILISB</p>
+        <p>{{ grupo.docente.descripcion | safe }}</p>
+    </div>
+    {% else %}
+    <p>Información del instructor no disponible.</p>
+    {% endif %}
+</div>

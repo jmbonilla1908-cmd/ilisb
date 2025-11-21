@@ -1,0 +1,38 @@
+{% extends "admin/layout.html" %}
+{% from '_form_helpers.html' import render_field %}
+
+{% block admin_content %}
+<div class="container-fluid px-4">
+    <h1 class="mt-4">{{ title }}</h1>
+    <ol class="breadcrumb mb-4">
+        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('marketing.admin_aliados') }}">Aliados</a></li>
+        <li class="breadcrumb-item active">{{ 'Editar' if aliado else 'Nuevo' }}</li>
+    </ol>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <i class="fas fa-handshake me-1"></i>
+            Formulario de Aliado Estratégico
+        </div>
+        <div class="card-body">
+            <form method="POST" novalidate>
+                {{ form.hidden_tag() }}
+                {{ render_field(form.nombre_empresa) }}
+                {{ render_field(form.logo_url) }}
+                {{ render_field(form.sitio_web) }}
+                {{ render_field(form.email_contacto) }}
+                {{ render_field(form.descripcion, rows=4) }}
+                {{ render_field(form.categoria) }}
+                {{ render_field(form.orden_presentacion) }}
+                {{ render_field(form.destacado) }}
+                {{ render_field(form.activo) }}
+                <div class="d-flex justify-content-end mt-4">
+                    <a href="{{ url_for('marketing.admin_aliados') }}" class="btn btn-secondary me-2">Cancelar</a>
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

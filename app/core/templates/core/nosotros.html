@@ -1,0 +1,38 @@
+{% extends "htmx_base.html" if htmx else "base.html" %}
+
+{% block content %}
+    <!-- Hero Section -->
+    <div class="position-relative mb-4 rounded-3" style="height: 400px; overflow: hidden;">
+        <img src="{{ url_for('static', filename='img/nosotros/fondo_nosotros.jpg') }}" class="d-block w-100" alt="Equipo ILISB" style="object-fit: cover; height: 100%;">
+        <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 p-3 rounded" style="position: absolute; bottom: 0; right: 15%; left: 15%;">
+            <h5 class="fw-bold">Bienvenido a ILISB</h5>
+            <p>Somos un Instituto de alta especialización en ingeniería y tecnología de sistemas de bombeo. Nos destacamos en la investigación, conocimiento y mejores prácticas, siendo la organización más importante de Latinoamérica en este campo.</p>
+            <p>ILISB brinda un conjunto de herramientas de ingeniería, cursos especializados y pertenencia a una red exclusiva para profesionales de diversos sectores, como la industria, la construcción, el suministro de agua y la agricultura.</p>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row align-items-md-stretch text-center">
+        <div class="col-md-4 mb-4">
+            <div class="h-100 p-5 text-white bg-dark rounded-3">
+                <h2>Cursos Especializados</h2>
+                <p>Impartidos por expertos, nuestros cursos están diseñados para potenciar y ampliar los conocimientos de profesionales en sistemas de bombeo.</p>
+                <a href="{{ url_for('cursos.lista_cursos') }}" class="btn btn-outline-light" hx-get="{{ url_for('cursos.lista_cursos') }}" hx-target="#content-wrapper" hx-swap="innerHTML" hx-push-url="true">Ver Cursos</a>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="h-100 p-5 bg-light border rounded-3">
+                <h2>Centro de Cálculos</h2>
+                <p>Nuestro Centro de Calculadoras para Bombas proporciona aplicativos de ingeniería que agilizan actividades relacionadas con el diseño, dimensionamiento y funcionamiento de sistemas de bombeo.</p>
+                <a href="{{ url_for('webapps.curvas_bomba') }}" class="btn btn-outline-secondary" hx-get="{{ url_for('webapps.curvas_bomba') }}" hx-target="#content-wrapper" hx-swap="innerHTML" hx-push-url="true">Ir a Aplicativos</a>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="h-100 p-5 text-white bg-primary rounded-3">
+                <h2>Membresía</h2>
+                <p>Nuestros profesionales certificados gozan del respaldo académico necesario para ofrecer servicios de consultoría y soporte técnico, resolviendo desafíos técnicos en sistemas de bombeo.</p>
+                <a href="{{ url_for('core.membresia') }}" class="btn btn-outline-light" hx-get="{{ url_for('core.membresia') }}" hx-target="#content-wrapper" hx-swap="innerHTML" hx-push-url="true">Únete Ahora</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

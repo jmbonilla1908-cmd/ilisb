@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ title }} - ILISB</title>
+    {{ bootstrap.load_css() }}
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}" type="image/png">
+    <!-- Tu CSS personalizado para sobreescribir o añadir estilos (cargado después de Bootstrap) -->
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"> -->
+</head>
+<body>
+    {% include '_navbar.html' %}
+
+    <main class="container">
+        {% include '_flash_messages.html' %}
+        <div id="content-wrapper" class="htmx-indicator-parent" hx-history-elt>
+            {# Indicador de carga centrado con clases de Bootstrap #}
+            <div class="htmx-indicator position-fixed top-50 start-50 translate-middle">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    {# Carousel de aliados estratégicos gestionable desde admin #}
+    {% include 'marketing/aliados_carousel.html' %}
+
+    {% include 'footer.html' %}
+
+    {{ bootstrap.load_js() }}
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>    
+</body>
+</html>

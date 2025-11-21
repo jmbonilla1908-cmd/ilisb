@@ -1,0 +1,40 @@
+{% extends 'admin/layout.html' %}
+{% from '_form_helpers.html' import render_field %}
+
+{% block admin_content %}
+<div class="container py-4">
+  <h1 class="h4 mb-4">{{ title }}</h1>
+  <form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="row g-3">
+      {{ render_field(form.id_curso, class_='col-md-6', **{'class': 'form-select'}) }}
+      {{ render_field(form.id_docente, class_='col-md-6', **{'class': 'form-select'}) }}
+      {{ render_field(form.estado, class_='col-md-4', **{'class': 'form-select'}) }}
+      {{ render_field(form.fecha_inicio, class_='col-md-4') }}
+      {{ render_field(form.fecha_fin, class_='col-md-4') }}
+      {{ render_field(form.capacidad_minima, class_='col-md-3') }}
+      {{ render_field(form.capacidad_maxima, class_='col-md-3') }}
+      {{ render_field(form.visible, class_='col-md-6 d-flex align-items-center gap-2') }}
+      
+      <hr class="my-3">
+      <h6 class="col-12">Precios</h6>
+      {{ render_field(form.precio_usuario, class_='col-md-3') }}
+      {{ render_field(form.precio_usuario_preinscripcion, class_='col-md-3') }}
+      {{ render_field(form.precio_miembro, class_='col-md-3') }}
+      {{ render_field(form.precio_miembro_preinscripcion, class_='col-md-3') }}
+
+      <hr class="my-3">
+      {{ render_field(form.horario_descripcion, class_='col-12', rows=3) }}
+    </div>
+    <div class="mt-4 d-flex gap-2">
+      {{ form.submit(class="btn btn-primary") }}
+      <a href="{{ url_for('admin.grupos') }}" class="btn btn-secondary">Cancelar</a>
+      {% if grupo %}
+      <form method="post" action="{{ url_for('admin.eliminar_grupo', grupo_id=grupo.id) }}" onsubmit="return confirm('¿Eliminar grupo?');" class="d-inline">
+        <button type="submit" class="btn btn-outline-danger">Eliminar</button>
+      </form>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

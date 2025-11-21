@@ -1,0 +1,28 @@
+# Entornos virtuales de Python
+.venv
+venv/
+ENV/
+env/
+
+# Archivos compilados de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Carpeta de instancia de Flask (puede contener bases de datos o archivos de sesión)
+/instance/
+
+# Archivos de variables de entorno
+.env
+.env.*
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
+
+# Archivos de IDEs
+.idea/
+.vscode/
+
+# Bases de datos SQLite
+*.sqlite3

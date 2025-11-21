@@ -1,0 +1,21 @@
+<div class="card">
+    <div class="card-body text-center">
+        <img src="{{ url_for('static', filename='img/logo_compacto.png') }}" alt="Logo ILISB" class="mb-3" width="80">
+        <h5 class="card-title">BIENVENIDO</h5>
+        <p class="card-text">Ingresa a tu cuenta para disfrutar de los beneficios.</p>
+        
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            {{ form.hidden_tag() }}
+            <div class="mb-3">
+                {{ form.email(class="form-control", placeholder="Email") }}
+            </div>
+            <div class="mb-3">
+                {{ form.password(class="form-control", placeholder="Contraseña") }}
+            </div>
+            {{ form.submit(class="btn btn-primary w-100") }}
+        </form>
+        <hr>
+        <p><a href="#">He olvidado mi contraseña</a></p>
+        <p>Si aún no tienes cuenta, regístrate gratis: <a href="{{ url_for('auth.register') }}">Obtener cuenta</a></p>
+    </div>
+</div>

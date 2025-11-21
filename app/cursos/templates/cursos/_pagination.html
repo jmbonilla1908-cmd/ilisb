@@ -1,0 +1,39 @@
+<nav aria-label="Paginación de cursos">
+    <ul class="pagination justify-content-center">
+        {# Botón 'Anterior' #}
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link" href="#"
+               hx-get="{{ url_for('cursos.lista_cursos', page=pagination.prev_num, especializacion_id=especializacion_id) }}"
+               hx-target="#cursos-content"
+               hx-select="#cursos-content"
+               hx-swap="innerHTML"
+               hx-push-url="true">&laquo;</a>
+        </li>
+
+        {# Números de página #}
+        {% for p in pagination.iter_pages() %}
+            {% if p %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="#"
+                       hx-get="{{ url_for('cursos.lista_cursos', page=p, especializacion_id=especializacion_id) }}"
+                       hx-target="#cursos-content"
+                       hx-select="#cursos-content"
+                       hx-swap="innerHTML"
+                       hx-push-url="true">{{ p }}</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+        {% endfor %}
+
+        {# Botón 'Siguiente' #}
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+            <a class="page-link" href="#"
+               hx-get="{{ url_for('cursos.lista_cursos', page=pagination.next_num, especializacion_id=especializacion_id) }}"
+               hx-target="#cursos-content"
+               hx-select="#cursos-content"
+               hx-swap="innerHTML"
+               hx-push-url="true">&raquo;</a>
+        </li>
+    </ul>
+</nav>

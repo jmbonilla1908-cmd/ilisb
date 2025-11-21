@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Bienvenido, {{ current_user.nombres }}</h2>
+            <p class="lead">Este es tu panel de control.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Columna Principal -->
+        <div class="col-lg-8">
+            
+            <!-- Próximas Sesiones -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Próximas Sesiones</h5>
+                </div>
+                <div class="card-body">
+                    {% if proximas_sesiones %}
+                        <ul class="list-group list-group-flush">
+                        {% for item in proximas_sesiones %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ item.curso.nombre if item.curso else 'Curso no disponible' }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ item.sesion.titulo }}</small>
+                                </div>
+                                <span class="badge bg-primary rounded-pill">{{ item.sesion.fecha.strftime('%d/%m/%Y') }}</span>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-center text-muted">No tienes sesiones programadas en los próximos 30 días.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Mis Cursos -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>Mis Cursos Matriculados</h5>
+                    <a href="{{ url_for('intranet.mis_cursos') }}" class="btn btn-sm btn-outline-secondary">Ver todos</a>
+                </div>
+                <div class="card-body">
+                    {% if matriculas %}
+                        <div class="list-group">
+                        {% for matricula in matriculas %}
+                            <a href="#" class="list-group-item list-group-item-action">{{ matricula.grupo.curso.nombre if matricula.grupo and matricula.grupo.curso else 'Curso no disponible' }}</a>
+                        {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-center text-muted">Aún no te has matriculado en ningún curso.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Columna Lateral -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Estado de la Membresía</h5>
+                </div>
+                <div class="card-body">
+                    {% if current_user.es_miembro_activo %}
+                        <h6 class="card-title text-success">Membresía Activa</h6>
+                        <p class="card-text">Tu membresía tipo <strong>{{ membresia.tipo_membresia|capitalize }}</strong> es válida hasta:</p>
+                        <p class="fs-5 text-center">{{ membresia.fecha_fin.strftime('%d de %B de %Y') }}</p>
+                        <a href="{{ url_for('core.membresia') }}" class="btn btn-success w-100">Gestionar Membresía</a>
+                    {% else %}
+                        <h6 class="card-title text-danger">Sin Membresía</h6>
+                        <p class="card-text">No tienes una membresía activa. ¡Accede a contenido exclusivo!</p>
+                        <a href="{{ url_for('core.membresia') }}" class="btn btn-primary w-100">Obtener Membresía</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

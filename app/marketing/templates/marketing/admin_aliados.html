@@ -1,0 +1,235 @@
+{% extends "admin/admin_base.html" %}
+
+{% block title %}Gestión de Aliados Estratégicos{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Aliados Estratégicos</h2>
+                <a href="{{ url_for('marketing.nuevo_aliado') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nuevo Aliado
+                </a>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {# Estadísticas rápidas #}
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5>{{ aliados.total }}</h5>
+                            <p class="mb-0">Total Aliados</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h5>{{ aliados.items | selectattr('activo') | list | length }}</h5>
+                            <p class="mb-0">Activos</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <h5>{{ aliados.items | selectattr('destacado') | list | length }}</h5>
+                            <p class="mb-0">Destacados</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <h5>{{ (aliados.items | sum(attribute='impresiones')) or 0 }}</h5>
+                            <p class="mb-0">Total Impresiones</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Tabla de aliados #}
+            <div class="card">
+                <div class="card-body">
+                    {% if aliados.items %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Logo</th>
+                                    <th>Empresa</th>
+                                    <th>Categoría</th>
+                                    <th>Orden</th>
+                                    <th>Estado</th>
+                                    <th>Analytics</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for aliado in aliados.items %}
+                                <tr>
+                                    <td>
+                                        <img src="{{ aliado.logo_url }}" 
+                                             alt="{{ aliado.nombre_empresa }}"
+                                             class="img-thumbnail"
+                                             style="max-width: 60px; max-height: 40px; object-fit: contain;">
+                                    </td>
+                                    <td>
+                                        <strong>{{ aliado.nombre_empresa }}</strong>
+                                        {% if aliado.sitio_web %}
+                                        <br><small class="text-muted">
+                                            <a href="{{ aliado.sitio_web }}" target="_blank">
+                                                <i class="fas fa-external-link-alt"></i> {{ aliado.sitio_web }}
+                                            </a>
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ aliado.categoria.title() }}</span>
+                                    </td>
+                                    <td>{{ aliado.orden_presentacion }}</td>
+                                    <td>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input toggle-aliado" 
+                                                   type="checkbox" 
+                                                   {% if aliado.activo %}checked{% endif %}
+                                                   data-aliado-id="{{ aliado.id }}">
+                                        </div>
+                                        {% if aliado.destacado %}
+                                        <span class="badge bg-warning">Destacado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <small>
+                                            <strong>{{ aliado.impresiones }}</strong> impresiones<br>
+                                            <strong>{{ aliado.clics }}</strong> clics
+                                            {% if aliado.ctr > 0 %}
+                                            <br>CTR: <strong>{{ "%.2f"|format(aliado.ctr) }}%</strong>
+                                            {% endif %}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('marketing.editar_aliado', aliado_id=aliado.id) }}" 
+                                               class="btn btn-outline-primary">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button class="btn btn-outline-danger" 
+                                                    onclick="confirmarEliminar({{ aliado.id }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {# Paginación #}
+                    {% if aliados.pages > 1 %}
+                    <nav aria-label="Paginación de aliados">
+                        <ul class="pagination justify-content-center">
+                            {% if aliados.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('marketing.admin_aliados', page=aliados.prev_num) }}">Anterior</a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for page_num in aliados.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != aliados.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('marketing.admin_aliados', page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                    {% endif %}
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">…</span>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if aliados.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('marketing.admin_aliados', page=aliados.next_num) }}">Siguiente</a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-handshake fa-3x mb-3"></i>
+                        <h5>No hay aliados estratégicos registrados</h5>
+                        <p>Comienza agregando tu primer aliado estratégico.</p>
+                        <a href="{{ url_for('marketing.nuevo_aliado') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Agregar Primer Aliado
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Toggle activo/inactivo
+document.addEventListener('DOMContentLoaded', function() {
+    const toggles = document.querySelectorAll('.toggle-aliado');
+    
+    toggles.forEach(toggle => {
+        toggle.addEventListener('change', function() {
+            const aliadoId = this.dataset.aliadoId;
+            
+            fetch(`/marketing/api/aliado/${aliadoId}/toggle`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Opcional: mostrar mensaje de éxito
+                    console.log('Estado actualizado:', data.message);
+                } else {
+                    // Revertir el toggle si hubo error
+                    this.checked = !this.checked;
+                    alert('Error al actualizar estado');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                this.checked = !this.checked;
+                alert('Error de conexión');
+            });
+        });
+    });
+});
+
+function confirmarEliminar(aliadoId) {
+    if (confirm('¿Estás seguro de que quieres eliminar este aliado estratégico?')) {
+        // Implementar eliminación
+        alert('Función de eliminación no implementada aún');
+    }
+}
+</script>
+{% endblock %}

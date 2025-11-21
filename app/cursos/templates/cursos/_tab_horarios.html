@@ -1,0 +1,34 @@
+<div data-tab="horarios">
+    {% if grupo %}
+        {% set fechas_json = grupo.fechas | from_json %}
+        {% set horario_json = grupo.horario | from_json %}
+        <div>
+            <h2 class="fecha">Fechas</h2>
+            {% for fecha in fechas_json %}
+                {# Aquí necesitarías una función helper para formatear la fecha a español #}
+                <p>{{ fecha }}</p>
+            {% endfor %}
+        </div>
+        <div>
+            <h2 class="horario">Horario</h2>
+            {% for hora in horario_json %}
+            <div class="modulo">
+                <ul>
+                    <li>
+                        <p>De {{ hora.horainicio }} a {{ hora.horafin }}</p>
+                        <p>
+                            {% for pais in hora.paises %}
+                            <span class="pais">
+                                {{ pais }}
+                            </span>
+                            {% endfor %}
+                        </p>
+                    </li>
+                </ul>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>No hay grupos programados para este curso en este momento.</p>
+    {% endif %}
+</div>

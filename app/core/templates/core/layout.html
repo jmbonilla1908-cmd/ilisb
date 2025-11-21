@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {# If a template variable is passed, include it. Otherwise, render the block. #}
+    {% if template %}
+        {% include template %}
+    {% else %}
+        {% block core_content %}{% endblock %}
+    {% endif %}
+{% endblock %}

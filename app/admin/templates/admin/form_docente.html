@@ -1,0 +1,27 @@
+{% extends 'admin/layout.html' %}
+{% from '_form_helpers.html' import render_field %}
+
+{% block admin_content %}
+<div class="container py-4">
+  <h1 class="h4 mb-4">{{ title }}</h1>
+  <form method="POST" novalidate>
+    {{ form.hidden_tag() }} {# Esto incluye el token CSRF #}
+
+    {{ render_field(form.nombre) }}
+    {{ render_field(form.cargo) }}
+    {{ render_field(form.descripcion, rows=5) }}
+    {{ render_field(form.imagen) }}
+
+    <div class="mt-4 d-flex gap-2">
+      {{ form.submit(class="btn btn-primary") }}
+      <a href="{{ url_for('admin.docentes') }}" class="btn btn-secondary">Cancelar</a>
+      
+      {% if docente %}
+      <form method="post" action="{{ url_for('admin.eliminar_docente', docente_id=docente.id) }}" onsubmit="return confirm('¿Eliminar docente?');" class="d-inline">
+        <button type="submit" class="btn btn-outline-danger">Eliminar</button>
+      </form>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

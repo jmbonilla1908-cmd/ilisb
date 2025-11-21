@@ -1,0 +1,33 @@
+{% extends 'admin/layout.html' %}
+{% from '_form_helpers.html' import render_field %}
+
+{% block admin_content %}
+<div class="container py-4">
+  <h1 class="h4 mb-4">{{ title }}</h1>
+  <form method="POST" novalidate>
+    {{ form.hidden_tag() }} {# Token CSRF y otros campos ocultos #}
+
+    {{ render_field(form.nombres) }}
+    {{ render_field(form.apellidos) }}
+    {{ render_field(form.email) }}
+    
+    {# Solo mostrar campos de contraseña al crear un nuevo alumno #}
+    {% if not alumno %}
+      {{ render_field(form.password) }}
+      {{ render_field(form.password2) }}
+    {% endif %}
+
+    {{ render_field(form.imagen) }}
+
+    <div class="mt-4 d-flex gap-2">
+      {{ form.submit(class="btn btn-primary") }}
+      <a href="{{ url_for('admin.alumnos') }}" class="btn btn-secondary">Cancelar</a>
+      {% if alumno %}
+      <form method="post" action="{{ url_for('admin.eliminar_alumno', alumno_id=alumno.id) }}" onsubmit="return confirm('¿Eliminar alumno?');" class="d-inline">
+        <button type="submit" class="btn btn-outline-danger">Eliminar</button>
+      </form>
+      {% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

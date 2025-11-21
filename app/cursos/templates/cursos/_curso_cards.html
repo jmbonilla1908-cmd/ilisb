@@ -1,0 +1,49 @@
+{# Este fragmento se usa para HTMX y para la carga inicial de la lista de cursos #}
+<div class="row row-cols-1 row-cols-md-2 g-4">
+    {% for curso in cursos %}
+        {% if curso.grupos.first() %}
+            <div class="col">
+                <div class="card h-100 shadow-sm course-card">
+                    <a href="{{ url_for('cursos.detalle_curso', slug=curso.slug) }}" class="text-decoration-none text-dark">
+                        {% if curso.banner %}
+                            <img src="{{ url_for('static', filename='img/cursos/' + curso.banner) }}" class="card-img-top" alt="{{ curso.nombre }}">
+                        {% elif curso.thumbnail %}
+                             <img src="{{ url_for('static', filename='img/cursos/' + curso.thumbnail) }}" class="card-img-top" alt="{{ curso.nombre }}">
+                        {% elif curso.foto %}
+                            {# Si hay múltiples fotos en JSON, toma la primera #}
+                            {% set fotos = curso.foto | from_json %}
+                            {% if fotos %}
+                                <img src="{{ url_for('static', filename='img/cursos/' + fotos[0]) }}" class="card-img-top" alt="{{ curso.nombre }}">
+                            {% else %}
+                                <img src="{{ url_for('static', filename='img/placeholder_curso.jpg') }}" class="card-img-top" alt="Imagen de curso por defecto">
+                            {% endif %}
+                        {% else %}
+                            <img src="{{ url_for('static', filename='img/placeholder_curso.jpg') }}" class="card-img-top" alt="Imagen de curso por defecto">
+                        {% endif %}
+                        <div class="card-body d-flex flex-column">
+                            <h6 class="card-title fw-bold">{{ curso.nombre }}</h6>
+                            <div class="mt-auto">
+                                {# Obtenemos la primera sesión del primer grupo para mostrar la fecha de inicio #}
+                                {% set primera_sesion = curso.grupos.first().sesiones | sort(attribute='fecha') | first %}
+                                {% if primera_sesion and primera_sesion.fecha %}
+                                <p class="card-text mb-0"><small class="text-muted">Inicia: {{ primera_sesion.fecha.strftime('%d/%m/%Y') }}</small></p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="col-12">
+            <div class="alert alert-light text-center" role="alert">
+                No se encontraron cursos para esta especialidad.
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{# Renderizamos la paginación #}
+<div class="mt-4">
+    {% include 'cursos/_pagination.html' %}
+</div>

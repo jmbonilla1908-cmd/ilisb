@@ -1,0 +1,17 @@
+<div data-tab="contenido">
+    {% set temario_json = curso.temario | from_json %}
+    {% for tema in temario_json %}
+    <div class="modulo">
+        <p>{{ tema.tipo }}</p>
+        <h2>{{ tema.titulo }}</h2>
+        <ul>
+            {% for item in tema.item %}
+            <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+    <div>
+        <p>Duración del curso: {{ curso.duracion }} horas</p>
+    </div>
+</div>

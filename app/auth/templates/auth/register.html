@@ -1,0 +1,57 @@
+{% extends "htmx_base.html" if htmx else "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <img src="{{ url_for('static', filename='img/logo_compacto.png') }}" alt="Logo ILISB" class="mb-3 mx-auto d-block" width="80">
+                <h3 class="card-title mb-4 text-center">Crear una cuenta</h3>
+                <form action="" method="post" hx-post="{{ url_for('auth.register') }}" hx-target="#content-wrapper" hx-swap="innerHTML" novalidate>
+                    {{ form.hidden_tag() }}
+                    <div class="mb-3 text-start">
+                        {{ form.nombres.label(class="form-label") }}
+                        {{ form.nombres(class="form-control" + (' is-invalid' if form.nombres.errors else ''), required=True) }}
+                        {% for error in form.nombres.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3 text-start">
+                        {{ form.apellidos.label(class="form-label") }}
+                        {{ form.apellidos(class="form-control" + (' is-invalid' if form.apellidos.errors else ''), required=True) }}
+                        {% for error in form.apellidos.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3 text-start">
+                        {{ form.email.label(class="form-label") }}
+                        {{ form.email(class="form-control" + (' is-invalid' if form.email.errors else ''), required=True) }}
+                        {% for error in form.email.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3 text-start">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-control" + (' is-invalid' if form.password.errors else ''), required=True) }}
+                        {% for error in form.password.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3 text-start">
+                        {{ form.password2.label(class="form-label") }}
+                        {{ form.password2(class="form-control" + (' is-invalid' if form.password2.errors else ''), required=True) }}
+                        {% for error in form.password2.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="d-grid">{{ form.submit(class="btn btn-primary") }}</div>
+                </form>
+                <hr>
+                <p class="small text-center">
+                    ¿Ya tienes una cuenta? <a href="{{ url_for('auth.login') }}" hx-get="{{ url_for('auth.login') }}" hx-target="#content-wrapper" hx-push-url="true">Ingresa aquí</a>.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

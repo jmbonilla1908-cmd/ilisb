@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Columna Izquierda: Navegación de Aplicativos -->
+        <div class="col-lg-2 d-none d-lg-block">
+            <h5>Aplicativos</h5>
+            <div class="list-group">
+                {% for t in tipos %}
+                    <a href="{{ url_for('webapps.por_tipo', tipo_id=t.id) }}" 
+                       class="list-group-item list-group-item-action {% if tipo and tipo.id == t.id %}active{% endif %}">
+                        {{ t.nombre }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Columna Central: Contenido del Aplicativo -->
+        <div class="col-lg-7">
+            {% block aplicativo_content %}
+            {# El contenido específico de cada aplicativo irá aquí #}
+            {% endblock %}
+        </div>
+
+        <!-- Columna Derecha: Instrucciones -->
+        <div class="col-lg-3">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        {% block instrucciones_titulo %}
+                            Instrucciones
+                        {% endblock %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% block instrucciones_content %}
+                    <p>
+                        Aquí se mostrarán las instrucciones de uso para el aplicativo
+                        que se está visualizando.
+                    </p>
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
