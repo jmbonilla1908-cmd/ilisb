@@ -1,0 +1,32 @@
+{% extends "webapps/base_aplicativo.html" %}
+
+{% block title %}Aplicativos Web de Ingeniería{% endblock %}
+
+{% block aplicativo_content %}
+    <div class="container-fluid pt-3">
+        <!-- Aplicativos Populares -->
+        <h3 class="mt-5">Populares</h3>
+        <hr>
+        <div class="row row-cols-1 row-cols-md-2 g-4">
+            {% for app in populares %}
+                <div class="col">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ app.nombre }}</h5>
+                            <p class="card-text">{{ app.descripcion_corta or 'Sin descripción.' }}</p>
+                            <a href="{{ url_for('webapps.aplicativo_detail', slug=app.slug) }}" class="btn btn-primary">Abrir</a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <p>No hay aplicativos populares en este momento.</p>
+            {% endfor %}
+        </div>
+
+        <!-- Aplicativos Recientes -->
+        <h3 class="mt-5">Recientes</h3>
+        <hr>
+        {# Aquí puedes añadir un bucle similar para los aplicativos 'recientes' #}
+
+    </div>
+{% endblock %}

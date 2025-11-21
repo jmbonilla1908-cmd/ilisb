@@ -3,7 +3,6 @@ from flask import render_template, request, jsonify, url_for, abort
 from app.cursos import bp
 from .models import Curso, Especializacion, Grupo, Sesion, db
 from werkzeug.exceptions import NotFound
-from app import htmx # Importamos la extensión htmx
 
 @bp.route('/cursos')
 def lista_cursos():
@@ -44,10 +43,6 @@ def detalle_curso(slug):
 @bp.route('/curso/<slug>/<tab>')
 def curso_tab(slug, tab):
     """Devuelve el fragmento de HTML para una pestaña específica del curso."""
-    if not htmx:
-        # Esta ruta solo debe ser accesible a través de peticiones HTMX.
-        abort(400, "Esta URL solo responde a peticiones HTMX.")
-
     curso = Curso.query.filter_by(slug=slug).first_or_404()
     grupo_activo = curso.grupos.filter_by(visible=True).order_by(Grupo.id.desc()).first()
 

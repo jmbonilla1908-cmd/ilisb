@@ -1,4 +1,4 @@
-{% extends "htmx_base.html" if htmx else "base.html" %}
+{% extends "base.html" %}
 
 {% block content %}
     <!-- Hero Section -->
@@ -16,21 +16,21 @@
             <div class="h-100 p-5 text-white bg-dark rounded-3">
                 <h2>Cursos Especializados</h2>
                 <p>Accede a una formación de primer nivel con cursos diseñados por expertos de la industria para potenciar tus habilidades técnicas y profesionales.</p>
-                <a href="{{ url_for('cursos.lista_cursos') }}" class="btn btn-outline-light" hx-get="{{ url_for('cursos.lista_cursos') }}" hx-target="#content-wrapper" hx-swap="innerHTML" hx-push-url="true">Ver Cursos</a>
+                <a href="{{ url_for('cursos.lista_cursos') }}" class="btn btn-outline-light">Ver Cursos</a>
             </div>
         </div>
         <div class="col-md-4 mb-4">
             <div class="h-100 p-5 bg-light border rounded-3">
                 <h2>Aplicativos Pro</h2>
                 <p>Utiliza nuestras herramientas de cálculo y simulación exclusivas para miembros. Optimiza tus diseños y soluciona problemas complejos con precisión.</p>
-                <a href="{{ url_for('webapps.curvas_bomba') }}" class="btn btn-outline-secondary" hx-get="{{ url_for('webapps.curvas_bomba') }}" hx-target="#content-wrapper" hx-swap="innerHTML" hx-push-url="true">Ir a Aplicativos</a>
+                <a href="{{ url_for('webapps.index') }}" class="btn btn-outline-secondary">Ir a Aplicativos</a>
             </div>
         </div>
         <div class="col-md-4 mb-4">
             <div class="h-100 p-5 text-white bg-primary rounded-3">
                 <h2>Únete a la Comunidad</h2>
                 <p>Forma parte de una red exclusiva de profesionales, participa en foros y accede a oportunidades únicas de networking y desarrollo.</p>
-                <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light" hx-get="{{ url_for('auth.register') }}" hx-target="#content-wrapper" hx-swap="innerHTML" hx-push-url="true">Regístrate Ahora</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light">Regístrate Ahora</a>
             </div>
         </div>
     </div>

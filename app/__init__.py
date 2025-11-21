@@ -4,7 +4,6 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_bootstrap import Bootstrap5
 from flask_wtf.csrf import CSRFProtect
-from flask_htmx import HTMX
 import json
 from werkzeug.utils import import_string
 
@@ -17,7 +16,6 @@ login_manager.login_message = 'Por favor, inicie sesión para acceder a esta pá
 login_manager.login_message_category = 'info'
 bootstrap = Bootstrap5()
 csrf = CSRFProtect()
-htmx = HTMX()
 
 def create_app(config_name='config.DevelopmentConfig'):
     app = Flask(__name__)
@@ -33,7 +31,6 @@ def create_app(config_name='config.DevelopmentConfig'):
     login_manager.init_app(app)
     bootstrap.init_app(app)
     csrf.init_app(app)
-    htmx.init_app(app)
 
     # Registrar Blueprints
     from app.core import bp as core_bp
@@ -41,10 +38,6 @@ def create_app(config_name='config.DevelopmentConfig'):
 
     from app.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
-
-    # Restauramos el blueprint de webapps que ya tenías
-    from app.webapps import bp as webapps_bp
-    app.register_blueprint(webapps_bp, url_prefix='/webapps')
 
     # Registrar el nuevo blueprint de cursos
     from app.cursos import bp as cursos_bp
@@ -70,6 +63,10 @@ def create_app(config_name='config.DevelopmentConfig'):
     from app.calendario import bp as calendario_bp
     app.register_blueprint(calendario_bp, url_prefix='/calendario')
 
+    # Registrar el blueprint de webapps
+    from app.webapps import bp as webapps_bp
+    app.register_blueprint(webapps_bp, url_prefix='/webapps')
+
     # Importar modelos para Flask-Migrate
     with app.app_context():
         from app.auth import models as auth_models  # noqa: F401
@@ -91,5 +88,26 @@ def create_app(config_name='config.DevelopmentConfig'):
 
     # Custom Jinja filters
     app.jinja_env.filters['from_json'] = json.loads
+
+    @app.template_filter('format_number')
+    def format_number(value, precision=2):
+        """
+        Filtro personalizado de Jinja para formatear números.
+        - Usa coma (,) como separador de miles.
+        - Usa punto (.) como separador decimal.
+        - Controla la cantidad de decimales.
+        """
+        try:
+            # 1. Formatear a string con punto decimal, sin separadores de miles.
+            formatted_str = f"{value:.{precision}f}"
+            
+            # 2. Separar parte entera y decimal.
+            integer_part, decimal_part = formatted_str.split('.')
+            
+            # 3. Añadir comas a la parte entera.
+            integer_part_with_commas = f"{int(integer_part):,}"
+            return f"{integer_part_with_commas}.{decimal_part}"
+        except (ValueError, TypeError):
+            return value # Devuelve el valor original si no se puede formatear
 
     return app

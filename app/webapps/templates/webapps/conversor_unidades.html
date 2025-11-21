@@ -1,0 +1,90 @@
+{% extends "webapps/base_aplicativo.html" %}
+
+{% block title %}{{ aplicativo.nombre }}{% endblock %}
+
+{% block aplicativo_content %}
+
+{# Menú de Pestañas para seleccionar la magnitud #}
+<ul class="nav nav-tabs mb-3">
+    {% for categoria, datos in unidades.items() %}
+    <li class="nav-item">
+        <a class="nav-link {% if categoria == magnitud_activa %}active{% endif %}" href="{{ url_for('webapps.aplicativo_detail', slug=aplicativo.slug, magnitud=categoria) }}">{{ datos.nombre }}</a>
+    </li>
+    {% endfor %}
+</ul>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Conversor de {{ unidades[magnitud_activa].nombre }}</h5>
+    </div>
+    <div class="card-body">
+        <form action="" method="GET">
+            {# Campos ocultos para mantener el estado #}
+            <input type="hidden" name="magnitud" value="{{ magnitud_activa }}">
+
+            <div class="row align-items-end">
+                {# Campo para introducir el valor a convertir #}
+                <div class="col-md-4">
+                    <label for="valor_entrada" class="form-label">Valor a Convertir</label>
+                    <input type="number" step="any" class="form-control" id="valor_entrada" name="valor_entrada" value="{{ valor_entrada or '' }}" required>
+                </div>
+
+                {# Selector para la unidad de origen #}
+                <div class="col-md-4">
+                    <label for="unidad_origen" class="form-label">Desde la Unidad</label>
+                    <select class="form-select" id="unidad_origen" name="unidad_origen">
+                        {% for slug, u in unidades[magnitud_activa].unidades.items() %}
+                            <option value="{{ slug }}" {% if slug == unidad_origen %}selected{% endif %}>{{ u.nombre|safe }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                {# Botón para ejecutar el cálculo #}
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary w-100">Convertir</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# Sección para mostrar los resultados #}
+{% if resultados %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0">Resultados</h5>
+    </div>
+    <div class="card-body">
+        <p class="lead">
+            <strong>{{ valor_entrada }}</strong> {{ unidades[magnitud_activa].unidades[unidad_origen].nombre|safe }} equivale a:
+        </p>
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+            {% for slug, valor in resultados.items() %}
+            <div class="col">
+                <div class="p-2 border rounded">
+                    <span class="fs-4">{{ valor|format_number(4) }}</span>
+                    <span class="text-muted">{{ unidades[magnitud_activa].unidades[slug].nombre|safe }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block instrucciones_titulo %}
+    {{ aplicativo.nombre }}
+{% endblock %}
+
+{% block instrucciones_content %}
+    <p>{{ aplicativo.descripcion }}</p>
+    <hr>
+    <ol>
+        <li>Seleccione la magnitud física que desea convertir (ej. Presión, Potencia).</li>
+        <li>Ingrese el valor numérico que conoce.</li>
+        <li>Seleccione la unidad de origen de su valor.</li>
+        <li>Haga clic en "Convertir" para ver los resultados en todas las unidades equivalentes.</li>
+    </ol>
+{% endblock %}

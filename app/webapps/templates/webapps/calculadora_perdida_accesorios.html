@@ -1,0 +1,123 @@
+{% extends "webapps/base_aplicativo.html" %}
+
+{% block title %}{{ aplicativo.nombre }}{% endblock %}
+
+{% block aplicativo_content %}
+<form action="" method="GET" id="form-perdidas">
+    <div class="row">
+        <!-- Columna de Parámetros y Resultados -->
+        <div class="col-lg-6">
+            <!-- Parámetros de Tubería -->
+            <div class="card mb-4">
+                <div class="card-header"><h5 class="mb-0">1. Parámetros de la Tubería y Fluido</h5></div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="caudal" class="form-label">Caudal (m³/h)</label>
+                            <input type="number" step="any" class="form-control" id="caudal" name="caudal" value="{{ request.args.get('caudal', 162) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="diametro" class="form-label">Diámetro Interno (mm)</label>
+                            <input type="number" step="any" class="form-control" id="diametro" name="diametro" value="{{ request.args.get('diametro', 150.1) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="longitud" class="form-label">Longitud de Tubería (m)</label>
+                            <input type="number" step="any" class="form-control" id="longitud" name="longitud" value="{{ request.args.get('longitud', 350) }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="coeficiente_c" class="form-label">Coeficiente C (Hazen-Williams)</label>
+                            <input type="number" step="any" class="form-control" id="coeficiente_c" name="coeficiente_c" value="{{ request.args.get('coeficiente_c', 85) }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resultados -->
+            {% if resultados %}
+            <div class="card">
+                <div class="card-header"><h5 class="mb-0">Resultados del Cálculo</h5></div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Pérdida por Fricción (Tubería)
+                            <span class="badge bg-primary rounded-pill fs-6">{{ resultados.hf_tuberia|format_number(2) }} m</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Pérdidas Menores (Accesorios)
+                            <span class="badge bg-secondary rounded-pill fs-6">{{ resultados.hf_accesorios|format_number(2) }} m</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center active">
+                            <strong>Pérdida de Carga Total (H<sub>T</sub>)</strong>
+                            <span class="badge bg-dark rounded-pill fs-5"><strong>{{ resultados.hf_total|format_number(2) }} m</strong></span>
+                        </li>
+                    </ul>
+                    <div class="mt-3 small text-muted">
+                        Cálculos realizados con una velocidad de flujo de <strong>{{ resultados.velocidad|format_number(2) }} m/s</strong>.
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Columna de Selección de Accesorios -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header"><h5 class="mb-0">2. Selección de Accesorios</h5></div>
+                <div class="card-body">
+                    <p>Añada los accesorios de su sistema. El formulario se actualizará con cada cambio.</p>
+                    <div class="accordion" id="accordionAccesorios">
+                        {% for cat_slug, categoria in accesorios.items() %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading-{{ cat_slug }}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ cat_slug }}">
+                                    {{ categoria.nombre }}
+                                </button>
+                            </h2>
+                            <div id="collapse-{{ cat_slug }}" class="accordion-collapse collapse">
+                                <div class="list-group list-group-flush">
+                                    {% for acc_slug, acc in categoria['items'].items() %}
+                                    <div class="list-group-item">
+                                        <div class="row align-items-center">
+                                            <div class="col-2">
+                                                <img src="{{ url_for('static', filename=acc.imagen) }}" class="img-fluid" alt="{{ acc.nombre }}">
+                                            </div>
+                                            <div class="col-6">
+                                                {{ acc.nombre }}
+                                            </div>
+                                            <div class="col-4">
+                                                <div class="input-group">
+                                                    <span class="input-group-text">Cant.</span>
+                                                    <input type="number" class="form-control" name="acc_{{ acc_slug }}" value="{{ request.args.get('acc_' + acc_slug, 0) }}" min="0" onchange="this.form.submit()">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block instrucciones_titulo %}
+    {{ aplicativo.nombre }}
+{% endblock %}
+
+{% block instrucciones_content %}
+    <p>{{ aplicativo.descripcion }}</p>
+    <hr>
+    <ol>
+        <li>Ingrese los datos de su tubería (caudal, diámetro, longitud) y el coeficiente de rugosidad de Hazen-Williams.</li>
+        <li>En la sección de accesorios, despliegue las categorías (Válvulas, Codos) y especifique la cantidad de cada elemento en su sistema.</li>
+        <li>La página se actualizará automáticamente con cada cambio, mostrando el desglose de pérdidas y la pérdida de carga total.</li>
+    </ol>
+    <p class="small text-muted">
+        Las pérdidas menores se calculan usando el método del coeficiente de resistencia (K), donde <strong>h<sub>L</sub> = K * (V²/2g)</strong>.
+    </p>
+{% endblock %}

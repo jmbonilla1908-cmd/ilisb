@@ -1,10 +1,8 @@
 from flask import render_template
 from app.core import bp
-from app import htmx
 from app.auth.forms import LoginForm
 
-@bp.route('/')
-@bp.route('/index')
+@bp.route('/') # Unificamos la ruta principal
 def index():
     return render_template('core/index.html', title='Inicio')
 

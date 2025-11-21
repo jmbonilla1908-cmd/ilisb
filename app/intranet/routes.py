@@ -131,6 +131,14 @@ def mis_cursos():
                          cursos_completados=cursos_completados)
 
 
+@intranetModule.route('/mis-datos')
+@login_required
+@student_required
+def mis_datos():
+    """Página para que el alumno vea y edite sus datos personales."""
+    return render_template('intranet/mis_datos.html', title='Mis Datos')
+
+
 @intranetModule.route('/configuracion', methods=['GET', 'POST'])
 @login_required
 @student_required

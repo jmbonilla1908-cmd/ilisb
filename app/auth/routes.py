@@ -14,9 +14,8 @@ def login():
         user = Alumno.query.filter_by(email=form.email.data).first()
         if user is None or not user.check_password(form.password.data):
             flash('Email o contraseña inválidos', 'danger')
-            # En caso de error, volvemos a renderizar la plantilla.
-            # HTMX intercambiará el contenido, una petición normal mostrará la página completa.
-            return render_template('auth/login.html', title='Ingresar', form=form), 422
+            # Si las credenciales son incorrectas, se vuelve a renderizar el formulario
+            return render_template('auth/login.html', title='Ingresar', form=form)
 
         login_user(user, remember=form.remember_me.data)
 
@@ -25,10 +24,8 @@ def login():
         if not next_page or not next_page.startswith('/'):
             next_page = url_for('intranet.dashboard')
 
-        # En caso de éxito, le decimos al cliente que redirija.
-        response = make_response()
-        response.headers['HX-Redirect'] = next_page
-        return response
+        # Redirección estándar de Flask
+        return redirect(next_page)
 
     return render_template('auth/login.html', title='Ingresar', form=form)
 
@@ -49,12 +46,10 @@ def register():
         db.session.commit()
         flash('¡Felicidades, ahora eres un usuario registrado!', 'success')
 
-        response = make_response()
-        response.headers['HX-Redirect'] = url_for('auth.login')
-        return response
+        return redirect(url_for('auth.login'))
 
     # Si el formulario no es válido en una petición POST, lo volvemos a renderizar con errores.
     if request.method == 'POST' and form.errors:
-         return render_template('auth/register.html', title='Registro', form=form), 422
+         return render_template('auth/register.html', title='Registro', form=form)
 
     return render_template('auth/register.html', title='Registro', form=form)

@@ -1,4 +1,4 @@
-{% extends "htmx_base.html" if htmx else "base.html" %}
+{% extends "base.html" %}
 
 {% block content %}
 <div class="row justify-content-center mt-5">
@@ -7,7 +7,7 @@
             <div class="card-body">
                 <img src="{{ url_for('static', filename='img/logo_compacto.png') }}" alt="Logo ILISB" class="mb-3 mx-auto d-block" width="80">
                 <h3 class="card-title mb-4 text-center">Crear una cuenta</h3>
-                <form action="" method="post" hx-post="{{ url_for('auth.register') }}" hx-target="#content-wrapper" hx-swap="innerHTML" novalidate>
+                <form action="" method="post" novalidate>
                     {{ form.hidden_tag() }}
                     <div class="mb-3 text-start">
                         {{ form.nombres.label(class="form-label") }}
@@ -48,7 +48,7 @@
                 </form>
                 <hr>
                 <p class="small text-center">
-                    ¿Ya tienes una cuenta? <a href="{{ url_for('auth.login') }}" hx-get="{{ url_for('auth.login') }}" hx-target="#content-wrapper" hx-push-url="true">Ingresa aquí</a>.
+                    ¿Ya tienes una cuenta? <a href="{{ url_for('auth.login') }}">Ingresa aquí</a>.
                 </p>
             </div>
         </div>

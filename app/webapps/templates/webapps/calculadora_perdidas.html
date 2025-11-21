@@ -1,0 +1,72 @@
+{% extends "webapps/base_aplicativo.html" %}
+
+{% block title %}{{ aplicativo.nombre }}{% endblock %}
+
+{% block aplicativo_content %}
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Parámetros de Cálculo (Hazen-Williams)</h5>
+        </div>
+        <div class="card-body">
+            <form action="" method="GET">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="caudal" class="form-label">Caudal (L/s)</label>
+                        <input type="number" step="any" class="form-control" id="caudal" name="caudal" value="{{ request.args.get('caudal', 50) }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="diametro" class="form-label">Diámetro Interno (mm)</label>
+                        <input type="number" step="any" class="form-control" id="diametro" name="diametro" value="{{ request.args.get('diametro', 150) }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="longitud" class="form-label">Longitud de Tubería (m)</label>
+                        <input type="number" step="any" class="form-control" id="longitud" name="longitud" value="{{ request.args.get('longitud', 1000) }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="coeficiente_c" class="form-label">Coeficiente C de Hazen-Williams</label>
+                        <input type="number" step="any" class="form-control" id="coeficiente_c" name="coeficiente_c" value="{{ request.args.get('coeficiente_c', 140) }}">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <button type="submit" name="calcular" value="1" class="btn btn-primary">Calcular Pérdidas</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if resultados %}
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5 class="mb-0">Resultados</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Pérdida de Carga (hf)</h4>
+                    <p class="display-6">{{ resultados.hf|format_number(2) }} <span class="fs-5 text-muted">m</span></p>
+                </div>
+                <div class="col-md-6">
+                    <h4>Gradiente Hidráulico (S)</h4>
+                    <p class="display-6">{{ resultados.S|format_number(4) }} <span class="fs-5 text-muted">m/m</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if graph_html %}
+    <div class="mt-4">
+        {{ graph_html|safe }}
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block instrucciones_titulo %}
+    {{ aplicativo.nombre }}
+{% endblock %}
+
+{% block instrucciones_content %}
+    <p>{{ aplicativo.descripcion }}</p>
+    <hr>
+    <small class="text-muted">La ecuación de Hazen-Williams es válida para agua a temperatura ambiente y flujos turbulentos. El coeficiente C depende del material y la antigüedad de la tubería (e.g., PVC nuevo: 150, Acero nuevo: 140, Hierro fundido usado: 100).</small>
+{% endblock %}

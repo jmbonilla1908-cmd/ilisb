@@ -4,7 +4,7 @@
         <h5 class="card-title">BIENVENIDO</h5>
         <p class="card-text text-muted">Ingresa a tu cuenta para disfrutar de los beneficios.</p>
         
-        <form method="POST" action="{{ url_for('auth.login') }}" hx-post="{{ url_for('auth.login') }}" hx-target="#content-wrapper" hx-swap="innerHTML">
+        <form method="POST" action="{{ url_for('auth.login') }}">
             {{ form.hidden_tag() }}
             <div class="mb-3 text-start">
                 {{ form.email.label(class="form-label") }}
@@ -18,6 +18,6 @@
         </form>
         <hr>
         <p class="small"><a href="#">He olvidado mi contraseña</a></p>
-        <p class="small">Si aún no tienes cuenta, <a href="{{ url_for('auth.register') }}" hx-get="{{ url_for('auth.register') }}" hx-target="#content-wrapper" hx-push-url="true">regrístrate gratis</a>.</p>
+        <p class="small">Si aún no tienes cuenta, <a href="{{ url_for('auth.register') }}">regrístrate gratis</a>.</p>
     </div>
 </div>

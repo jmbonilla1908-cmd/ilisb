@@ -22,6 +22,14 @@ class TipoAplicativo(db.Model):
     def __repr__(self):
         return f'<TipoAplicativo {self.nombre}>'
 
+    @property
+    def slug(self):
+        """Genera un slug para URLs amigables."""
+        import re
+        slug = re.sub(r'[^\w\s-]', '', self.nombre.lower())
+        slug = re.sub(r'[-\s]+', '-', slug)
+        return slug.strip('-')
+
 
 class Aplicativo(db.Model):
     """
@@ -30,16 +38,18 @@ class Aplicativo(db.Model):
     """
     __tablename__ = 'aplicativo'
     
-    id = db.Column('idaplicativo', db.Integer, primary_key=True)
+    id = db.Column('idAplicativo', db.Integer, primary_key=True)
     tipo_aplicativo_id = db.Column(
-        'idtipoaplicativo', db.Integer,
+        'idTipoaplicativo', db.Integer,
         db.ForeignKey('tipo_aplicativo.idtipoaplicativo'), nullable=False
     )
-    nombre = db.Column('nombre', db.String(200), nullable=False)
+    nombre = db.Column('nombreaplicativo', db.String(500), nullable=False)
     descripcion = db.Column('descripcion', db.Text)
     descripcion_corta = db.Column('descripcion_corta', db.String(300))
-    ruta_archivo = db.Column('ruta', db.String(500), nullable=False)
-    imagen_preview = db.Column('imagen', db.String(500))
+    ruta_archivo = db.Column('ruta_archivo', db.String(500), nullable=False)
+    url_help = db.Column('urlhelpAplicativo', db.String(500))
+    imagen_preview = db.Column('imagen_preview', db.String(500))
+    template_file = db.Column(db.String(120), nullable=True) # El campo que queríamos añadir
     requiere_membresia = db.Column(
         'requiere_membresia', db.Boolean, default=False, nullable=False
     )

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Datos{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Menú de Navegación de la Intranet -->
+            <div class="list-group">
+                <a href="{{ url_for('intranet.dashboard') }}" class="list-group-item list-group-item-action">Dashboard</a>
+                <a href="{{ url_for('intranet.mis_cursos') }}" class="list-group-item list-group-item-action">Mis Cursos</a>
+                <a href="{{ url_for('intranet.mis_datos') }}" class="list-group-item list-group-item-action active" aria-current="true">Mis Datos</a>
+                <a href="{{ url_for('intranet.configuracion') }}" class="list-group-item list-group-item-action">Configuración</a>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <h1 class="mb-4">Mis Datos Personales</h1>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Información de la Cuenta</h5>
+                    <hr>
+                    {# 
+                        Aquí iría un formulario (creado con Flask-WTF) para que el usuario
+                        pueda actualizar sus datos. Por ahora, mostramos la información actual.
+                    #}
+                    <form>
+                        <div class="mb-3">
+                            <label for="nombres" class="form-label">Nombres</label>
+                            <input type="text" class="form-control" id="nombres" value="{{ current_user.nombres }}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="apellidos" class="form-label">Apellidos</label>
+                            <input type="text" class="form-control" id="apellidos" value="{{ current_user.apellidos }}" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" value="{{ current_user.email }}" readonly>
+                        </div>
+                        <button type="submit" class="btn btn-primary disabled">Actualizar Datos (Próximamente)</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

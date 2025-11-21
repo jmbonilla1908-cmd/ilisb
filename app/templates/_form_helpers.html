@@ -1,4 +1,4 @@
-{% macro render_field(field, class="", **kwargs) %}
+{% macro render_field(field, class="") %}
 <div class="mb-3 {{ kwargs.pop('class_', '') }}">
     {{ field.label(class="form-label") }}
     {% if field.type == 'BooleanField' %}

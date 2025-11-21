@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Mis Cursos{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Menú de Navegación de la Intranet -->
+            <div class="list-group">
+                <a href="{{ url_for('intranet.dashboard') }}" class="list-group-item list-group-item-action">Dashboard</a>
+                <a href="{{ url_for('intranet.mis_cursos') }}" class="list-group-item list-group-item-action active" aria-current="true">Mis Cursos</a>
+                <a href="{{ url_for('intranet.mis_datos') }}" class="list-group-item list-group-item-action">Mis Datos</a>
+                <a href="{{ url_for('intranet.configuracion') }}" class="list-group-item list-group-item-action">Configuración</a>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <h1 class="mb-4">Mis Cursos</h1>
+            
+            {% if current_user.cursos %}
+                <div class="row row-cols-1 row-cols-md-2 g-4">
+                    {% for inscripcion in current_user.cursos %}
+                        <div class="col">
+                            <div class="card h-100">
+                                <img src="{{ inscripcion.curso.imagen_url or url_for('static', filename='img/cursos/default_curso.jpg') }}" class="card-img-top" alt="{{ inscripcion.curso.nombre }}">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ inscripcion.curso.nombre }}</h5>
+                                    <p class="card-text">{{ inscripcion.curso.descripcion_corta or 'Un curso especializado de ILISB.' }}</p>
+                                    <a href="{{ url_for('cursos.detalle_curso', slug=inscripcion.curso.slug) }}" class="btn btn-primary">Ir al Curso</a>
+                                </div>
+                                <div class="card-footer">
+                                    <small class="text-muted">Inscrito el: {{ inscripcion.fecha_inscripcion.strftime('%d/%m/%Y') }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="alert alert-info" role="alert">
+                    Aún no te has inscrito en ningún curso. <a href="{{ url_for('cursos.lista_cursos') }}" class="alert-link">¡Explora nuestro catálogo de cursos aquí!</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
