@@ -1,117 +1,120 @@
-{% extends "admin/layout.html" %}
+{% extends "admin/_layout.html" %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}Gestión de Docentes{% endblock %}
 
 {% block admin_content %}
 <div class="container-fluid">
-    <!-- Header con estadísticas -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Gestión de Docentes</h1>
-        <a class="btn btn-primary" href="{{ url_for('admin.nuevo_docente') }}">
-            <i class="fas fa-plus"></i> Agregar Docente
-        </a>
-    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Gestión de Docentes</h2>
+                <a href="{{ url_for('admin.nuevo_docente') }}" class="btn btn-primary">
+                    <i class="fas fa-user-tie"></i> Nuevo Docente
+                </a>
+            </div>
 
-    <!-- Estadísticas -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Total Docentes
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ docentes|length }}</div>
+            {# Tarjetas de estadísticas #}
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5>{{ pagination.total or 0 }}</h5>
+                            <p class="mb-0">Total Docentes</p>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-chalkboard-teacher fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h5>{{ pagination.items | selectattr('activo') | list | length }}</h5>
+                            <p class="mb-0">Activos</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
+
+            {# Tabla de docentes #}
+            <div class="card">
                 <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Activos
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ docentes|selectattr('activo')|list|length }}
-    <div class="container-fluid px-0">
-        <div class="card shadow-sm mb-4">
-            <div class="card-header bg-white border-bottom py-3">
-                <h6 class="m-0 fw-bold text-primary">Lista de Docentes</h6>
-            </div>
-            <div class="card-body p-0">
-                {% if docentes %}
+                    {% if pagination and pagination.items %}
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover table-bordered table-sm align-middle mb-0">
-                            <thead class="table-light">
+                        <table class="table table-striped table-hover">
+                            <thead>
                                 <tr>
-                                    <th class="text-nowrap">ID</th>
-                                    <th class="text-nowrap">Nombre</th>
-                                    <th class="text-nowrap">Email</th>
-                                    <th class="text-nowrap">Teléfono</th>
-                                    <th class="text-nowrap">Especialización</th>
-                                    <th class="text-nowrap">Estado</th>
-                                    <th class="text-nowrap">Acciones</th>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Cargo</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
-                        {% for docente in docentes %}
-                        <tr>
-                            <td>{{ docente.id }}</td>
-                            <td>
-                                <strong>{{ docente.nombre }}</strong>
-                                {% if docente.descripcion %}
-                                    <br><small class="text-muted">{{ docente.descripcion[:100] }}...</small>
-                                {% endif %}
-                            </td>
-                            <td>{{ docente.email }}</td>
-                            <td>{{ docente.telefono or '-' }}</td>
-                            <td>
-                                {% if docente.especializacion %}
-                                    <span class="badge badge-info">{{ docente.especializacion.nombre }}</span>
+                                {% for docente in pagination.items %}
+                                <tr>
+                                    <td>{{ docente.id }}</td>
+                                    <td>
+                                        <strong>{{ docente.nombre }}</strong>
+                                        <br><small class="text-muted">{{ docente.email or 'Sin email' }}</small>
+                                    </td>
+                                    <td>{{ docente.cargo or 'N/A' }}</td>
+                                    <td>
+                                        {% if docente.activo %}
+                                            <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('admin.editar_docente', docente_id=docente.id) }}" class="btn btn-outline-primary" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button class="btn btn-outline-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de que quieres eliminar a este docente?');">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {# Paginación #}
+                    {% if pagination.pages > 1 %}
+                    <nav>
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.docentes', page=pagination.prev_num) }}">Anterior</a>
+                            </li>
+                            {% for page_num in pagination.iter_pages() %}
+                                {% if page_num %}
+                                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                                        <a class="page-link" href="{{ url_for('admin.docentes', page=page_num) }}">{{ page_num }}</a>
+                                    </li>
                                 {% else %}
-                                    <span class="badge badge-light">Sin especialización</span>
+                                    <li class="page-item disabled"><span class="page-link">…</span></li>
                                 {% endif %}
-                            </td>
-                            <td>
-                                {% if docente.activo %}
-                                    <span class="badge badge-success">Activo</span>
-                                {% else %}
-                                    <span class="badge badge-secondary">Inactivo</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{{ url_for('admin.editar_docente', docente_id=docente.id) }}" class="btn btn-outline-primary" title="Editar">Editar</a>
-                                    <form method="POST" action="{{ url_for('admin.eliminar_docente', docente_id=docente.id) }}" style="display:inline;">
-                                        <button type="submit" class="btn btn-outline-danger" title="Eliminar">Eliminar</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                            {% endfor %}
+                            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.docentes', page=pagination.next_num) }}">Siguiente</a>
+                            </li>
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-chalkboard-teacher fa-3x mb-3"></i>
+                        <h5>No hay docentes registrados</h5>
+                        <p>Comienza agregando tu primer docente.</p>
+                        <a href="{{ url_for('admin.nuevo_docente') }}" class="btn btn-primary mt-3">
+                            <i class="fas fa-user-tie"></i> Agregar Primer Docente
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
-        {% else %}
-            <div class="alert alert-info text-center">
-                <h4>No hay docentes registrados</h4>
-                <p>Parece que aún no hay docentes en el sistema.</p>
-                <a class="btn btn-primary" href="{{ url_for('admin.nuevo_docente') }}">
-                    Registrar primer docente
-                </a>
-            </div>
-        {% endif %}
-    </div>
+        </div>
     </div>
 </div>
-
 {% endblock %}

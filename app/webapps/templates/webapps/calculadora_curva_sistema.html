@@ -4,9 +4,89 @@
 
 {% block aplicativo_content %}
 <form action="" method="GET" id="form-curvas">
+    <!-- Fila de Formularios de Entrada -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <!-- 1. Puntos de la Curva de la Bomba -->
+            <div class="card mb-3">
+                <div class="card-header"><h5 class="mb-0">1. Curva de la Bomba</h5></div>
+                <div class="card-body">
+                    <div class="row g-2 mb-2">
+                        <div class="col-6"><label class="form-label">Caudal (Q, m³/h)</label></div>
+                        <div class="col-6"><label class="form-label">Altura (H, m)</label></div>
+                    </div>
+                    {% set puntos_q = request.getlist('q_bomba') %}
+                    {% set puntos_h = request.getlist('h_bomba') %}
+                    {% for i in range(puntos_q|length) %}
+                    <div class="row g-2 mb-1">
+                        <div class="col-6">
+                            <input type="text" inputmode="decimal" class="form-control" name="q_bomba" value="{{ puntos_q[i] }}">
+                        </div>
+                        <div class="col-6">
+                            <input type="text" inputmode="decimal" class="form-control" name="h_bomba" value="{{ puntos_h[i] }}">
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <div class="d-flex justify-content-between mt-2">
+                        <button type="submit" name="add_point" value="1" class="btn btn-sm btn-outline-secondary">Añadir Punto</button>
+                        <button type="submit" name="remove_point" value="1" class="btn btn-sm btn-outline-danger">Quitar Punto</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <!-- 2. Curva del Sistema -->
+            <div class="card mb-3">
+                <div class="card-header"><h5 class="mb-0">2. Curva del Sistema</h5></div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <label for="cota" class="form-label">Altura Estática (m)</label>
+                        <input type="text" inputmode="decimal" class="form-control" id="cota" name="cota" value="{{ request.get('cota', '28.1') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="variacion_max" class="form-label">Δ Variación Máxima (m)</label>
+                        <input type="text" inputmode="decimal" class="form-control" id="variacion_max" name="variacion_max" value="{{ request.get('variacion_max', '6.0') }}">
+                    </div>
+                    <hr>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="metodo_sistema" id="metodo_po" value="po" {% if request.get('metodo_sistema', 'po') == 'po' %}checked{% endif %}>
+                        <label class="form-check-label" for="metodo_po">Por Punto de Operación</label>
+                    </div>
+                    <div class="row g-2 mb-2 ps-3">
+                        <div class="col-6">
+                            <label class="form-label">Q Op. (m³/h)</label>
+                            <input type="text" inputmode="decimal" class="form-control" name="q_operacion" value="{{ request.get('q_operacion', '120') }}">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">H Op. (m)</label>
+                            <input type="text" inputmode="decimal" class="form-control" name="h_operacion" value="{{ request.get('h_operacion', '38') }}">
+                        </div>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="metodo_sistema" id="metodo_hf" value="hf" {% if request.get('metodo_sistema') == 'hf' %}checked{% endif %}>
+                        <label class="form-check-label" for="metodo_hf">Por Pérdidas (hf)</label>
+                    </div>
+                     <div class="row g-2 ps-3">
+                        <div class="col-6">
+                            <label class="form-label">Q (m³/h)</label>
+                            <input type="text" inputmode="decimal" class="form-control" name="q_hf" value="{{ request.get('q_hf', '120') }}">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">hf (m)</label>
+                            <input type="text" inputmode="decimal" class="form-control" name="h_hf" value="{{ request.get('h_hf', '10') }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="d-grid mb-4">
+        <button type="submit" name="calcular" value="1" class="btn btn-primary btn-lg">Graficar</button>
+    </div>
+    
+    <!-- Fila del Gráfico y Controles -->
     <div class="row">
-        <!-- Columna Izquierda: Gráfico -->
-        <div class="col-lg-8">
+        <div class="col-12">
             <div class="card">
                 <div class="card-body">
                     {{ graph_html|safe }}
@@ -18,99 +98,20 @@
                         <div class="col-md-6">
                             <label for="frecuencia_hz" class="form-label">Frecuencia (Hz)</label>
                             <div class="input-group">
-                                <input type="range" class="form-range" min="30" max="60" step="0.5" id="frecuencia_hz" name="frecuencia_hz" value="{{ request.get('frecuencia_hz', 60) }}" onchange="this.form.submit()">
-                                <span class="input-group-text">{{ request.get('frecuencia_hz', 60) }}</span>
+                                <input type="range" class="form-range" min="30" max="60" step="0.5" id="frecuencia_hz" name="frecuencia_hz" value="{{ request.get('frecuencia_hz', '60') }}" onchange="this.form.submit()">
+                                <span class="input-group-text">{{ request.get('frecuencia_hz', '60') }}</span>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <label for="nivel_succion" class="form-label">Nivel Succión (m)</label>
                             <div class="input-group">
-                                <input type="range" class="form-range" min="{{ request.get('cota', 28.1) | float - request.get('variacion_max', 6.0) | float }}" max="{{ request.get('cota', 28.1) }}" step="0.1" id="nivel_succion" name="nivel_succion" value="{{ request.get('nivel_succion', request.get('cota', 28.1)) }}" onchange="this.form.submit()">
-                                <span class="input-group-text">{{ request.get('nivel_succion', request.get('cota', 28.1)) }}</span>
+                                <input type="range" class="form-range" min="{{ request.get('cota', '28.1') | float - request.get('variacion_max', '6.0') | float }}" max="{{ request.get('cota', '28.1') }}" step="0.1" id="nivel_succion" name="nivel_succion" value="{{ request.get('nivel_succion', request.get('cota', '28.1')) }}" onchange="this.form.submit()">
+                                <span class="input-group-text">{{ request.get('nivel_succion', request.get('cota', '28.1')) }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
                 {% endif %}
-            </div>
-        </div>
-
-        <!-- Columna Derecha: Formularios de Entrada -->
-        <div class="col-lg-4">
-            <!-- 1. Puntos de la Curva de la Bomba -->
-            <div class="card mb-3">
-                <div class="card-header"><h5 class="mb-0">1. Curva de la Bomba</h5></div>
-                <div class="card-body">
-                    <div class="row g-2 mb-2">
-                        <div class="col-6"><label class="form-label">Caudal (Q)</label></div>
-                        <div class="col-6"><label class="form-label">Altura (H)</label></div>
-                    </div>
-                    {% set puntos_q = request.getlist('q_bomba') %}
-                    {% set puntos_h = request.getlist('h_bomba') %}
-                    {% for i in range(puntos_q|length) %}
-                    <div class="row g-2 mb-1">
-                        <div class="col-6">
-                            <input type="text" inputmode="decimal" class="form-control form-control-sm" name="q_bomba" value="{{ puntos_q[i] }}">
-                        </div>
-                        <div class="col-6">
-                            <input type="text" inputmode="decimal" class="form-control form-control-sm" name="h_bomba" value="{{ puntos_h[i] }}">
-                        </div>
-                    </div>
-                    {% endfor %}
-                    <div class="d-flex justify-content-between mt-2">
-                        <button type="submit" name="add_point" value="1" class="btn btn-sm btn-outline-secondary">+</button>
-                        <button type="submit" name="remove_point" value="1" class="btn btn-sm btn-outline-secondary">-</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 2. Curva del Sistema -->
-            <div class="card mb-3">
-                <div class="card-header"><h5 class="mb-0">2. Curva del Sistema</h5></div>
-                <div class="card-body">
-                    <div class="mb-2">
-                        <label for="cota" class="form-label">Altura Estática (m)</label>
-                        <input type="text" inputmode="decimal" class="form-control" id="cota" name="cota" value="{{ request.get('cota', 28.1) }}">
-                    </div>
-                    <div class="mb-3">
-                        <label for="variacion_max" class="form-label">Δ Variación Máxima (m)</label>
-                        <input type="text" inputmode="decimal" class="form-control" id="variacion_max" name="variacion_max" value="{{ request.get('variacion_max', 6.0) }}">
-                    </div>
-                    <hr>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="metodo_sistema" id="metodo_po" value="po" {% if request.get('metodo_sistema', 'po') == 'po' %}checked{% endif %}>
-                        <label class="form-check-label" for="metodo_po">Por Punto de Operación</label>
-                    </div>
-                    <div class="row g-2 mb-2">
-                        <div class="col-6">
-                            <label class="form-label">Q Op. (m³/h)</label>
-                            <input type="text" inputmode="decimal" class="form-control form-control-sm" name="q_operacion" value="{{ request.get('q_operacion', 120) }}">
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label">H Op. (m)</label>
-                            <input type="text" inputmode="decimal" class="form-control form-control-sm" name="h_operacion" value="{{ request.get('h_operacion', 38) }}">
-                        </div>
-                    </div>
-                    <div class="form-check">
-                        <input class="form-check-input" type="radio" name="metodo_sistema" id="metodo_hf" value="hf" {% if request.get('metodo_sistema') == 'hf' %}checked{% endif %}>
-                        <label class="form-check-label" for="metodo_hf">Por Pérdidas (hf)</label>
-                    </div>
-                     <div class="row g-2">
-                        <div class="col-6">
-                            <label class="form-label">Q (m³/h)</label>
-                            <input type="text" inputmode="decimal" class="form-control form-control-sm" name="q_hf" value="{{ request.get('q_hf', 120) }}">
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label">hf (m)</label>
-                            <input type="text" inputmode="decimal" class="form-control form-control-sm" name="h_hf" value="{{ request.get('h_hf', 10) }}">
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Botón de Acción -->
-            <div class="d-grid">
-                <button type="submit" name="calcular" value="1" class="btn btn-primary">Graficar</button>
             </div>
         </div>
     </div>

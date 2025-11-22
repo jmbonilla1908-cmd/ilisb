@@ -1,8 +1,11 @@
 import json
-from flask import render_template, request, jsonify, url_for, abort
+from flask import render_template, request, jsonify, url_for, abort, flash, redirect
+from flask_login import login_required, current_user
 from app.cursos import bp
-from .models import Curso, Especializacion, Grupo, Sesion, db
 from werkzeug.exceptions import NotFound
+from .models import Curso, Especializacion, Grupo, Sesion, db
+from .forms import MatriculaForm # Importamos el nuevo formulario
+from app.matriculas.models import AlumnoGrupo # Importar desde el módulo correcto
 
 @bp.route('/cursos')
 def lista_cursos():
@@ -27,33 +30,57 @@ def lista_cursos():
 @bp.route('/curso/<slug>')
 def detalle_curso(slug):
     """Muestra la página de detalle de un curso específico."""
+    # Obtener la pestaña activa de la URL, por defecto 'overview'
+    active_tab = request.args.get('tab', 'overview')
     # Usamos .first_or_404() para simplificar el manejo de errores si el curso no existe.
     curso = Curso.query.filter_by(slug=slug).first_or_404()
 
-    # Buscamos el primer grupo visible para este curso.
-    # En el futuro, podrías tener una lógica más compleja para seleccionar el grupo
-    # (por ejemplo, el más próximo a empezar).
-    grupo_activo = curso.grupos.filter_by(visible=True).order_by(Grupo.id.desc()).first()
+    form = MatriculaForm() # Creamos una instancia del formulario
+    # Buscamos el primer grupo ACTIVO y CONFIRMADO para mostrar en la página.
+    grupo_activo = curso.grupos.filter(
+        Grupo.visible == True,
+        Grupo.estado == 'CONFIRMADO'
+    ).order_by(Grupo.fecha_inicio.asc()).first()
 
-    # Pasamos tanto el 'curso' como el 'grupo_activo' a la plantilla.
-    # La plantilla principal ahora solo necesita el curso y el grupo para el layout.
-    # El contenido de la primera pestaña se cargará a través de HTMX.
-    return render_template('cursos/detalle_curso.html', title=curso.nombre, curso=curso, grupo=grupo_activo)
-
-@bp.route('/curso/<slug>/<tab>')
-def curso_tab(slug, tab):
-    """Devuelve el fragmento de HTML para una pestaña específica del curso."""
+    return render_template('cursos/detalle_curso.html', 
+                           title=curso.nombre, 
+                           curso=curso, 
+                           form=form, # Pasamos el formulario a la plantilla
+                           grupo=grupo_activo,
+                           active_tab=active_tab)
+    
+@bp.route('/curso/<slug>/matricular', methods=['POST'])
+@login_required
+def matricular_curso(slug):
+    """Inscribe al alumno actual en un curso."""
     curso = Curso.query.filter_by(slug=slug).first_or_404()
-    grupo_activo = curso.grupos.filter_by(visible=True).order_by(Grupo.id.desc()).first()
+    form = MatriculaForm()
 
-    # Mapeo de pestañas a plantillas parciales
-    template_map = {
-        'overview': 'cursos/_tab_overview.html',
-        'contenido': 'cursos/_tab_contenido.html',
-        'instructor': 'cursos/_tab_instructor.html',
-        'horarios': 'cursos/_tab_horarios.html',
-        'pagos': 'cursos/_tab_pagos.html',
-    }
+    if not form.validate_on_submit():
+        flash('Error de validación. Por favor, intente de nuevo.', 'danger')
+        return redirect(url_for('cursos.detalle_curso', slug=slug))
+    
+    # Lógica corregida: Buscamos el primer grupo visible y confirmado para este curso.
+    grupo_disponible = Grupo.query.filter(
+        Grupo.id_curso == curso.id,
+        Grupo.visible == True,
+        Grupo.estado == 'CONFIRMADO'
+    ).order_by(Grupo.fecha_inicio.asc()).first()
 
-    template = template_map.get(tab, '404.html') # Devuelve 404 si la pestaña no es válida
-    return render_template(template, curso=curso, grupo=grupo_activo)
+    if not grupo_disponible:
+        flash('Lo sentimos, no hay grupos disponibles para este curso en este momento.', 'warning')
+        return redirect(url_for('cursos.detalle_curso', slug=slug))
+
+    # Verificamos si el alumno ya está inscrito
+    inscripcion_existente = AlumnoGrupo.query.filter_by(alumno_id=current_user.id, grupo_id=grupo_disponible.id).first()
+    if inscripcion_existente:
+        flash('Ya te encuentras matriculado en este curso.', 'info')
+        return redirect(url_for('cursos.detalle_curso', slug=slug))
+
+    # Creamos la nueva inscripción
+    nueva_inscripcion = AlumnoGrupo(alumno_id=current_user.id, grupo_id=grupo_disponible.id)
+    db.session.add(nueva_inscripcion)
+    db.session.commit()
+
+    flash(f'¡Felicidades! Te has matriculado exitosamente en el curso "{curso.nombre}".', 'success')
+    return redirect(url_for('intranet.mis_cursos'))

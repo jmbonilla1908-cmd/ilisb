@@ -1,26 +1,15 @@
 <div data-tab="pagos" id="pagos">
-    <div id="div_pagos">
-        {% if grupo %}
-            {% if current_user.is_authenticated %}
-                <div id="caja_precios">
-                    {% if current_user.es_miembro_activo %}
-                        <p class="resalte_navy">Precio especial por ser <b>miembro</b></p>
-                        <p class="pagos normal"><span>$</span><span>{{ "%.2f"|format(grupo.precio_miembro) }}</span></p>
-                    {% else %}
-                        <p class="pagos normal"><span>$</span><span>{{ "%.2f"|format(grupo.precio_usuario) }}</span></p>
-                    {% endif %}
-                    <p><a href="#" class="boton">Inscribirse</a></p>
-                </div>
-            {% else %}
-                <div class="boxlogin">
-                    <h4>Inicia sesión para inscribirte</h4>
-                    <p>Para poder inscribirte a este curso, primero necesitas iniciar sesión o crear una cuenta.</p>
-                    <a href="{{ url_for('auth.login', next=request.url) }}" class="boton">Iniciar Sesión</a>
-                    <a href="{{ url_for('auth.register') }}" class="link">Crear cuenta</a>
-                </div>
-            {% endif %}
-        {% else %}
-            <p>La inscripción no está disponible ya que no hay grupos programados.</p>
-        {% endif %}
-    </div>
+    <h4>Precios y Formas de Pago</h4>
+    {% if grupo %}
+        <p>A continuación se muestran los precios para este curso:</p>
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">Precio General: <strong>${{ "%.2f"|format(grupo.precio_usuario) }}</strong></li>
+            <li class="list-group-item">Precio para Miembros ILISB: <strong>${{ "%.2f"|format(grupo.precio_miembro) }}</strong></li>
+        </ul>
+        <p class="mt-3">Para inscribirte, por favor utiliza el botón <strong>"Quiero este curso"</strong> que se encuentra en la parte superior de la página.</p>
+        <hr>
+        <p>Aquí se detallarán las formas de pago aceptadas (transferencia bancaria, pasarelas de pago, etc.).</p>
+    {% else %}
+        <p>Los precios y la información de pago no están disponibles ya que no hay grupos programados para este curso en este momento.</p>
+    {% endif %}
 </div>

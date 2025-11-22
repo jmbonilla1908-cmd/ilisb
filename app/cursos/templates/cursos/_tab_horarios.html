@@ -1,32 +1,14 @@
 <div data-tab="horarios">
     {% if grupo %}
-        {% set fechas_json = grupo.fechas | from_json %}
-        {% set horario_json = grupo.horario | from_json %}
         <div>
-            <h2 class="fecha">Fechas</h2>
-            {% for fecha in fechas_json %}
-                {# Aquí necesitarías una función helper para formatear la fecha a español #}
-                <p>{{ fecha }}</p>
-            {% endfor %}
+            <h4>Fechas</h4>
+            <p><strong>Inicio:</strong> {{ grupo.fecha_inicio.strftime('%d de %B de %Y') if grupo.fecha_inicio else 'Por definir' }}</p>
+            <p><strong>Fin:</strong> {{ grupo.fecha_fin.strftime('%d de %B de %Y') if grupo.fecha_fin else 'Por definir' }}</p>
         </div>
-        <div>
-            <h2 class="horario">Horario</h2>
-            {% for hora in horario_json %}
-            <div class="modulo">
-                <ul>
-                    <li>
-                        <p>De {{ hora.horainicio }} a {{ hora.horafin }}</p>
-                        <p>
-                            {% for pais in hora.paises %}
-                            <span class="pais">
-                                {{ pais }}
-                            </span>
-                            {% endfor %}
-                        </p>
-                    </li>
-                </ul>
-            </div>
-            {% endfor %}
+        <div class="mt-4">
+            <h4>Horario</h4>
+            {# Usamos el filtro 'safe' si el contenido puede tener HTML, como <br> #}
+            <p>{{ grupo.horario_descripcion | safe if grupo.horario_descripcion else 'El horario detallado será publicado próximamente.' }}</p>
         </div>
     {% else %}
         <p>No hay grupos programados para este curso en este momento.</p>

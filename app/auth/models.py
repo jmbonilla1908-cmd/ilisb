@@ -44,7 +44,8 @@ class Alumno(UserMixin, db.Model):
     fecha_email_cambio = db.Column('fechaEmailCambio', db.DateTime)
     apuntes = db.Column('apuntes', db.String(500))
     
-    # Relación con la tabla de asociación AlumnoGrupo
+    # Relación con la tabla de asociación AlumnoGrupo (importada desde matriculas)
+    from app.matriculas.models import AlumnoGrupo
     grupos_asociados = db.relationship('AlumnoGrupo', back_populates='alumno', cascade="all, delete-orphan")
     
     # ... (podemos añadir el resto de campos después)

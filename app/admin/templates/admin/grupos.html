@@ -1,139 +1,150 @@
-{% extends "admin/layout.html" %}
+{% extends "admin/_layout.html" %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}Gestión de Grupos{% endblock %}
 
 {% block admin_content %}
 <div class="container-fluid">
-    <!-- Header con estadísticas -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Gestión de Grupos</h1>
-        <a class="btn btn-primary" href="{{ url_for('admin.nuevo_grupo') }}">
-            Crear Grupo
-        </a>
-    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Gestión de Grupos</h2>
+                <a href="{{ url_for('admin.nuevo_grupo') }}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle"></i> Nuevo Grupo
+                </a>
+            </div>
 
-    <!-- Estadísticas -->
-    <div class="row mb-4">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Total Grupos
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ grupos|length }}</div>
+            {# Tarjetas de estadísticas #}
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5>{{ pagination.total or 0 }}</h5>
+                            <p class="mb-0">Total Grupos</p>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h5>{{ pagination.items | selectattr('estado', 'equalto', 'CONFIRMADO') | list | length }}</h5>
+                            <p class="mb-0">Confirmados</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <h5>{{ pagination.items | selectattr('estado', 'equalto', 'EN_CURSO') | list | length }}</h5>
+                            <p class="mb-0">En Curso</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-secondary text-white">
+                        <div class="card-body">
+                            <h5>{{ pagination.items | selectattr('estado', 'equalto', 'FINALIZADO') | list | length }}</h5>
+                            <p class="mb-0">Finalizados</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Activos
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ grupos|selectattr('activo')|list|length }}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-friends fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-        <!-- Tabla de grupos -->
-        <div class="container-fluid px-0">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-white border-bottom py-3">
-                    <h6 class="m-0 fw-bold text-primary">Lista de Grupos</h6>
-                </div>
-                <div class="card-body p-0">
-                    {% if grupos %}
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover table-bordered table-sm align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="text-nowrap">ID</th>
-                                        <th class="text-nowrap">Grupo</th>
-                                        <th class="text-nowrap">Curso</th>
-                                        <th class="text-nowrap">Docente</th>
-                                        <th class="text-nowrap">Capacidad</th>
-                                        <th class="text-nowrap">Inscritos</th>
-                                        <th class="text-nowrap">Estado</th>
-                                        <th class="text-nowrap">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                            {% for grupo in grupos %}
-                            <tr>
-                                <td>{{ grupo.id }}</td>
-                                <td>
-                                    <strong>Grupo {{ grupo.id }}</strong>
-                                    <br><small class="text-muted">{{ grupo.horario[:50] if grupo.horario else 'Sin horario' }}...</small>
-                                </td>
-                                <td>
-                                    {% if grupo.curso %}
-                                        <span class="badge badge-primary">{{ grupo.curso.nombre }}</span>
-                                    {% else %}
-                                        <span class="badge badge-light">Sin curso asignado</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if grupo.docente %}
-                                        {{ grupo.docente.nombre }}
-                                    {% else %}
-                                        <span class="text-muted">Sin docente asignado</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <span class="badge badge-secondary">{{ grupo.capacidad_maxima or 'Sin límite' }}</span>
-                                </td>
-                                <td>
-                                    <span class="badge badge-info">{{ grupo.alumnos|length if grupo.alumnos else 0 }}</span>
-                                </td>
-                                <td>
-                                    {% if grupo.activo %}
-                                        <span class="badge badge-success">Activo</span>
-                                    {% else %}
-                                        <span class="badge badge-secondary">Inactivo</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="{{ url_for('admin.editar_grupo', grupo_id=grupo.id) }}" class="btn btn-outline-primary" title="Editar">Editar</a>
-                                        <form method="POST" action="{{ url_for('admin.eliminar_grupo', grupo_id=grupo.id) }}" style="display:inline;">
-                                            <button type="submit" class="btn btn-outline-danger" title="Eliminar">Eliminar</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
+            {# Tabla de grupos #}
+            <div class="card">
+                <div class="card-body">
+                    {% if pagination and pagination.items %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Curso</th>
+                                    <th>Fechas</th>
+                                    <th>Estado</th>
+                                    <th>Inscritos</th>
+                                    <th>Visible</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for grupo in pagination.items %}
+                                <tr>
+                                    <td>{{ grupo.id }}</td>
+                                    <td>
+                                        <strong>{{ grupo.curso.nombre }}</strong>
+                                        <br><small class="text-muted">Docente: {{ grupo.docente.nombre or 'N/A' }}</small>
+                                    </td>
+                                    <td>
+                                        <small>
+                                            <strong>Inicio:</strong> {{ grupo.fecha_inicio.strftime('%d-%m-%Y') if grupo.fecha_inicio else 'N/A' }}
+                                            <br><strong>Fin:</strong> {{ grupo.fecha_fin.strftime('%d-%m-%Y') if grupo.fecha_fin else 'N/A' }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        {% set estado_color = {'PROPUESTO': 'secondary', 'CONFIRMADO': 'success', 'EN_CURSO': 'info', 'FINALIZADO': 'dark', 'CANCELADO': 'danger'} %}
+                                        <span class="badge bg-{{ estado_color.get(grupo.estado, 'light') }}">{{ grupo.estado.replace('_', ' ') }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge rounded-pill bg-primary">{{ grupo.inscritos }} / {{ grupo.capacidad_maxima or '∞' }}</span>
+                                    </td>
+                                    <td>
+                                        {% if grupo.visible %}
+                                            <span class="badge bg-success">Sí</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">No</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('admin.editar_grupo', grupo_id=grupo.id) }}" class="btn btn-outline-primary" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button class="btn btn-outline-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de que quieres eliminar este grupo?');">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {# Paginación #}
+                    {% if pagination.pages > 1 %}
+                    <nav>
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.grupos', page=pagination.prev_num) }}">Anterior</a>
+                            </li>
+                            {% for page_num in pagination.iter_pages() %}
+                                {% if page_num %}
+                                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                                        <a class="page-link" href="{{ url_for('admin.grupos', page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                                {% endif %}
                             {% endfor %}
-                        </tbody>
-                    </table>
+                            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.grupos', page=pagination.next_num) }}">Siguiente</a>
+                            </li>
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-layer-group fa-3x mb-3"></i>
+                        <h5>No hay grupos registrados</h5>
+                        <p>Comienza creando tu primer grupo para un curso.</p>
+                        <a href="{{ url_for('admin.nuevo_grupo') }}" class="btn btn-primary mt-3">
+                            <i class="fas fa-plus-circle"></i> Crear Primer Grupo
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
-            {% else %}
-                <div class="alert alert-info text-center">
-                    <h4>No hay grupos registrados</h4>
-                    <p>Parece que aún no hay grupos en el sistema.</p>
-                    <a class="btn btn-primary" href="{{ url_for('admin.nuevo_grupo') }}">
-                        Crear primer grupo
-                    </a>
-                </div>
-            {% endif %}
+            </div>
         </div>
     </div>
 </div>
-
 {% endblock %}

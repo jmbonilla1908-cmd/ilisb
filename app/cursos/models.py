@@ -1,4 +1,5 @@
 from app import db
+from datetime import datetime, timezone
 from sqlalchemy.dialects.mysql import TEXT
 
 # Tabla de asociación para la relación muchos-a-muchos entre Curso y Especializacion

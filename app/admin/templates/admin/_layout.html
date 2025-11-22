@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{{ title or 'Panel de Administración' }}{% endblock %} - ILISB Admin</title>
+    {{ bootstrap.load_css() }}
+    <!-- Font Awesome para los iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="icon" href="{{ url_for('static', filename='img/favicon.png') }}" type="image/png">
+</head>
+<body class="bg-light">
+    {# Importamos la macro de formularios aquí para que esté disponible en todas las plantillas hijas #}
+    {% from '_form_helpers.html' import render_field %}
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Incluimos la barra lateral desde su propio archivo -->
+            {% include 'admin/_sidebar.html' %}
+            
+            <!-- Contenido principal -->
+            <main class="col-md-9 col-lg-10">
+                <!-- Área de contenido -->
+                <div class="p-4">
+                    {# Incluimos el parcial desde la carpeta global de plantillas #}
+                    {% include '_flash_messages.html' %}
+                    
+                    {% block admin_content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    {{ bootstrap.load_js() }}
+    {% block scripts %}{% endblock %}
+</body>
+</html>

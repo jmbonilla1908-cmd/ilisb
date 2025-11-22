@@ -1,39 +1,57 @@
-{% extends "admin/layout.html" %}
-{% from '_form_helpers.html' import render_field %}
+{% extends "admin/_layout.html" %}
+
+{% block title %}{{ title }}{% endblock %}
 
 {% block admin_content %}
-<div class="container-fluid px-4">
-    <h1 class="mt-4">{{ title }}</h1>
-    <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{{ url_for('admin.cursos') }}">Cursos</a></li>
-        <li class="breadcrumb-item active">{{ 'Editar' if curso else 'Nuevo' }}</li>
-    </ol>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="w-100">{{ title }}</h2>
+            </div>
 
-    <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-edit me-1"></i>
-            Formulario de Curso
-        </div>
-        <div class="card-body">
-            <form method="POST" novalidate>
-                {{ form.hidden_tag() }}
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" novalidate enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
 
-                {{ render_field(form.nombre) }}
-                {{ render_field(form.duracion) }}
-                {{ render_field(form.texto_corto, rows=3) }}
-                {{ render_field(form.descripcion, rows=8) }}
-                {{ render_field(form.temario, rows=10) }}
-                <div class="form-text mb-3">
-                    El temario debe estar en formato JSON. Puedes usar un validador online para asegurarte de que es correcto.
+                        <div class="row">
+                            <div class="col-md-8">
+                                {{ render_field(form.nombre, class="form-control form-control-lg") }}
+                            </div>
+                            <div class="col-md-4">
+                                {{ render_field(form.duracion, class="form-control") }}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Banner Actual</label>
+                            <div>
+                                {% if curso and curso.banner %}
+                                    <img src="{{ url_for('static', filename='img/cursos/' + curso.banner) }}" alt="Banner actual" class="img-thumbnail mb-2" style="max-height: 150px;">
+                                {% else %}
+                                    <p class="text-muted">No hay imagen de banner asignada.</p>
+                                {% endif %}
+                            </div>
+                            {# Usamos render_field para mantener la consistencia del campo de subida #}
+                            {{ render_field(form.banner, class="form-control", help_text="Sube una nueva imagen para reemplazar la actual.") }}
+                        </div>
+                        
+                        {{ render_field(form.texto_corto, class="form-control", rows=3) }}
+                        {{ render_field(form.descripcion, class="form-control", rows=8) }}
+                        {{ render_field(form.temario, class="form-control", rows=10) }}
+                        <div class="form-text mb-3">
+                            El temario debe estar en formato JSON. Puedes usar un validador online para asegurarte de que es correcto.
+                        </div>
+                        {{ render_field(form.footer, class="form-control", rows=5) }}
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <a href="{{ url_for('admin.cursos') }}" class="btn btn-secondary me-2">Cancelar</a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
                 </div>
-                {{ render_field(form.footer, rows=5) }}
-
-                <div class="d-flex justify-content-end">
-                    <a href="{{ url_for('admin.cursos') }}" class="btn btn-secondary me-2">Cancelar</a>
-                    {{ form.submit(class="btn btn-primary") }}
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>

@@ -4,7 +4,7 @@
 <div class="container-fluid mt-4">
     <div class="row">
         <!-- Columna Izquierda: Navegación de Aplicativos -->
-        <div class="col-lg-2 d-none d-lg-block">
+        <div class="col-lg-3 d-none d-lg-block">
             <div class="card">
                 <div class="card-header">
                     <h5 class="mb-0">Herramientas de cálculo online</h5>
@@ -33,14 +33,14 @@
         </div>
 
         <!-- Columna Central: Contenido del Aplicativo -->
-        <div class="col-lg-7">
+        <div class="col-lg-6">
             {% block aplicativo_content %}
             {# El contenido específico de cada aplicativo irá aquí #}
             {% endblock %}
         </div>
 
         <!-- Columna Derecha: Instrucciones -->
-        <div class="col-lg-3">
+        <div class="col-lg-3 d-none d-lg-block">
             <div class="card sticky-top" style="top: 20px;">
                 <div class="card-header">
                     <h5 class="mb-0">

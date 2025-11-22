@@ -1,37 +1,37 @@
-{% extends "admin/layout.html" %}
-{% from '_form_helpers.html' import render_field %}
+{% extends "admin/_layout.html" %}
+
+{% block title %}{{ title }}{% endblock %}
 
 {% block admin_content %}
-<div class="container-fluid px-4">
-    <h1 class="mt-4">{{ title }}</h1>
-    <ol class="breadcrumb mb-4">
-        <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
-        <li class="breadcrumb-item"><a href="{{ url_for('marketing.admin_aliados') }}">Aliados</a></li>
-        <li class="breadcrumb-item active">{{ 'Editar' if aliado else 'Nuevo' }}</li>
-    </ol>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="w-100">{{ title }}</h2>
+            </div>
 
-    <div class="card mb-4">
-        <div class="card-header">
-            <i class="fas fa-handshake me-1"></i>
-            Formulario de Aliado Estratégico
-        </div>
-        <div class="card-body">
-            <form method="POST" novalidate>
-                {{ form.hidden_tag() }}
-                {{ render_field(form.nombre_empresa) }}
-                {{ render_field(form.logo_url) }}
-                {{ render_field(form.sitio_web) }}
-                {{ render_field(form.email_contacto) }}
-                {{ render_field(form.descripcion, rows=4) }}
-                {{ render_field(form.categoria) }}
-                {{ render_field(form.orden_presentacion) }}
-                {{ render_field(form.destacado) }}
-                {{ render_field(form.activo) }}
-                <div class="d-flex justify-content-end mt-4">
-                    <a href="{{ url_for('marketing.admin_aliados') }}" class="btn btn-secondary me-2">Cancelar</a>
-                    {{ form.submit(class="btn btn-primary") }}
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+                        {{ render_field(form.nombre_empresa, class="form-control") }}
+                        {{ render_field(form.logo_url, class="form-control", help_text="URL completa de la imagen del logo.") }}
+                        {{ render_field(form.sitio_web, class="form-control") }}
+                        {{ render_field(form.email_contacto, class="form-control") }}
+                        {{ render_field(form.descripcion, class="form-control", rows=4) }}
+                        {{ render_field(form.categoria, class="form-select") }}
+                        {{ render_field(form.orden_presentacion, class="form-control", help_text="Un número menor se muestra primero.") }}
+                        <hr>
+                        {{ render_field(form.destacado, class="form-check-input") }}
+                        {{ render_field(form.activo, class="form-check-input") }}
+                        <hr>
+                        <div class="d-flex justify-content-end mt-4">
+                            <a href="{{ url_for('marketing.admin_aliados') }}" class="btn btn-secondary me-2">Cancelar</a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>

@@ -309,7 +309,27 @@ def limpiar_categorias_vacias():
         else:
             print("No se encontraron categorías vacías.")
 
+def limpiar_datos_obsoletos():
+    """
+    Limpia datos de prueba o campos obsoletos de la base de datos.
+    """
+    with app.app_context():
+        print("Buscando datos obsoletos para limpiar...")
+        from app.cursos.models import Curso
+        
+        # Busca cursos que contengan el texto de muestra en 'texto_corto'
+        cursos_a_limpiar = Curso.query.filter(Curso.texto_corto.contains("Esto es un texto de muestra")).all()
+        
+        if cursos_a_limpiar:
+            for curso in cursos_a_limpiar:
+                print(f"Limpiando 'texto_corto' del curso: '{curso.nombre}'")
+                # Reemplazamos el contenido obsoleto por una cadena vacía o un texto adecuado.
+                curso.texto_corto = "Descripción corta del curso próximamente disponible."
+            db.session.commit()
+            print("Limpieza de datos obsoletos completada.")
+
 
 if __name__ == '__main__':
     sincronizar_estructura()
     limpiar_categorias_vacias()
+    limpiar_datos_obsoletos()

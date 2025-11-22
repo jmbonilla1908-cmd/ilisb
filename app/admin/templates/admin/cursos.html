@@ -1,0 +1,130 @@
+{% extends "admin/_layout.html" %}
+
+{% block title %}Gestión de Cursos{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Gestión de Cursos</h2>
+                <a href="{{ url_for('admin.nuevo_curso') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Nuevo Curso
+                </a>
+            </div>
+
+            {# Tarjetas de estadísticas #}
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5>{{ pagination.total or 0 }}</h5>
+                            <p class="mb-0">Total Cursos</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            {# Solución: Iteramos para sumar el resultado de llamar al método .count() en cada relación 'grupos' #}
+                            {% set total_grupos = namespace(value=0) %}
+                            {% for curso in pagination.items %}
+                                {% set total_grupos.value = total_grupos.value + curso.grupos.count() %}
+                            {% endfor %}
+                            <h5>{{ total_grupos.value }}</h5>
+                            <p class="mb-0">Total Grupos (todos los estados)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Tabla de cursos #}
+            <div class="card">
+                <div class="card-body">
+                    {% if pagination and pagination.items %}
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nombre del Curso</th>
+                                        <th>Duración</th>
+                                        <th>Grupos</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for curso in pagination.items %}
+                                    <tr>
+                                        <td>{{ curso.id }}</td>
+                                        <td>
+                                            <strong>{{ curso.nombre }}</strong>
+                                            {% if curso.slug %}
+                                                <br><small class="text-muted"><code>/{{ curso.slug }}</code></small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ curso.duracion or 'N/A' }} hrs</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge rounded-pill bg-primary">{{ curso.grupos.count() }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('cursos.detalle_curso', slug=curso.slug) }}" 
+                                                   class="btn btn-outline-info" title="Ver curso público" target="_blank">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <a href="{{ url_for('admin.editar_curso', slug=curso.slug) }}" 
+                                                   class="btn btn-outline-primary" title="Editar">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button class="btn btn-outline-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de que quieres eliminar este curso?');">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {# Paginación #}
+                        {% if pagination.pages > 1 %}
+                        <nav>
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ url_for('admin.cursos', page=pagination.prev_num) }}">Anterior</a>
+                                </li>
+                                {% for page_num in pagination.iter_pages() %}
+                                    {% if page_num %}
+                                        <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                                            <a class="page-link" href="{{ url_for('admin.cursos', page=page_num) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                                    {% endif %}
+                                {% endfor %}
+                                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ url_for('admin.cursos', page=pagination.next_num) }}">Siguiente</a>
+                                </li>
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-book-open fa-3x mb-3"></i>
+                            <h4>No hay cursos registrados</h4>
+                            <p>Comienza creando tu primer curso.</p>
+                            <a href="{{ url_for('admin.nuevo_curso') }}" class="btn btn-primary mt-3">
+                                <i class="fas fa-plus"></i> Crear Primer Curso
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

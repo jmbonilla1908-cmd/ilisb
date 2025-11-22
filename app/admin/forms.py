@@ -1,18 +1,40 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileField, FileAllowed
 from wtforms import (StringField, PasswordField, BooleanField, SubmitField, 
                      TextAreaField, SelectField, DateField, IntegerField, 
-                     DecimalField)
-from wtforms.validators import DataRequired, ValidationError, Optional, Email, EqualTo, NumberRange
+                     DecimalField, EmailField)
+from wtforms.validators import DataRequired, ValidationError, Optional, Email, EqualTo, NumberRange, Length
 from app.admin.models import User
 from app.auth.models import Alumno
 from app.cursos.models import Curso, Docente
 
 
 class AdminLoginForm(FlaskForm):
-    username = StringField('Usuario', validators=[DataRequired()])
-    password = PasswordField('Contraseña', validators=[DataRequired()])
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Recuérdame')
-    submit = SubmitField('Entrar')
+    submit = SubmitField('Iniciar Sesión')
+
+
+class AdminUserForm(FlaskForm):
+    """Formulario para crear y editar usuarios administradores."""
+    username = StringField('Nombre de usuario', validators=[DataRequired(), Length(min=4, max=25)])
+    full_name = StringField('Nombre Completo', validators=[DataRequired(), Length(min=4, max=100)])
+    email = EmailField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Contraseña', validators=[
+        Optional(),
+        Length(min=8, message='La contraseña debe tener al menos 8 caracteres.'),
+        EqualTo('confirm_password', message='Las contraseñas deben coincidir.')
+    ])
+    confirm_password = PasswordField('Confirmar Contraseña')
+    is_active = BooleanField('Activo', default=True)
+    is_superuser = BooleanField('Es Superusuario (Otorga todos los permisos)')
+    submit = SubmitField('Guardar Usuario')
+
+    def validate_username(self, username):
+        user = User.query.filter_by(username=username.data).first()
+        if user:
+            raise ValidationError('Este nombre de usuario ya está en uso. Por favor, elija otro.')
 
 
 class DocenteForm(FlaskForm):
@@ -70,8 +92,8 @@ class GrupoForm(FlaskForm):
 
     def __init__(self, *args, **kwargs):
         super(GrupoForm, self).__init__(*args, **kwargs)
-        self.id_curso.choices = [(c.id, c.nombre) for c in Curso.query.order_by('nombre').all()]
-        self.id_docente.choices = [(d.id, d.nombre) for d in Docente.query.order_by('nombre').all()]
+        self.id_curso.choices = [(c.id, c.nombre) for c in Curso.query.order_by(Curso.nombre).all()]
+        self.id_docente.choices = [(d.id, d.nombre) for d in Docente.query.order_by(Docente.nombre).all()]
 
     def validate_fecha_fin(self, field):
         if field.data and self.fecha_inicio.data and field.data < self.fecha_inicio.data:
@@ -90,4 +112,7 @@ class CursoForm(FlaskForm):
     descripcion = TextAreaField('Descripción Completa', validators=[DataRequired()])
     temario = TextAreaField('Temario (formato JSON)', validators=[DataRequired()])
     footer = TextAreaField('Contenido del Pie de Página (Opcional)', validators=[Optional()])
+    banner = FileField('Imagen del Banner', validators=[
+        FileAllowed(['jpg', 'jpeg', 'png'], '¡Solo se permiten imágenes (jpg, png)!')
+    ])
     submit = SubmitField('Guardar Cambios')

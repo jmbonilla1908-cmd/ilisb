@@ -1,107 +1,137 @@
-{% extends "admin/layout.html" %}
+{% extends "admin/_layout.html" %}
 
-{% block title %}{{ title }}{% endblock %}
+{% block title %}Gestión de Alumnos{% endblock %}
 
 {% block admin_content %}
 <div class="container-fluid">
-    <!-- Header con estadísticas -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Gestión de Alumnos</h1>
-        <a class="btn btn-primary" href="{{ url_for('admin.nuevo_alumno') }}">
-            Agregar Alumno
-                    </div>
-                </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Gestión de Alumnos</h2>
+                <a href="{{ url_for('admin.nuevo_alumno') }}" class="btn btn-primary">
+                    <i class="fas fa-user-plus"></i> Nuevo Alumno
+                </a>
             </div>
-        </div>
-        
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Activos
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">
-                                {{ alumnos|selectattr('is_active')|list|length }}
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-check fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
-        <!-- Tabla de alumnos -->
-        <div class="container-fluid px-0">
-            <div class="card shadow-sm mb-4">
-                <div class="card-header bg-white border-bottom py-3">
-                    <h6 class="m-0 fw-bold text-primary">Lista de Alumnos</h6>
+            {# Tarjetas de estadísticas #}
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5>{{ pagination.total or 0 }}</h5>
+                            <p class="mb-0">Total Alumnos</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body p-0">
-                    {% if alumnos %}
-                        <div class="table-responsive">
-                            <table class="table table-striped table-hover table-bordered table-sm align-middle mb-0">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th class="text-nowrap">ID</th>
-                                        <th class="text-nowrap">Nombre</th>
-                                        <th class="text-nowrap">Email</th>
-                                        <th class="text-nowrap">Teléfono</th>
-                                        <th class="text-nowrap">Ciudad</th>
-                                        <th class="text-nowrap">Estado</th>
-                                        <th class="text-nowrap">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                            {% for alumno in alumnos %}
-                            <tr>
-                                <td>{{ alumno.id }}</td>
-                                <td>
-                                    <strong>{{ alumno.primer_nombre }} {{ alumno.primer_apellido }}</strong>
-                                    {% if alumno.segundo_nombre or alumno.segundo_apellido %}
-                                        <br><small class="text-muted">
-                                            {{ alumno.segundo_nombre or '' }} {{ alumno.segundo_apellido or '' }}
-                                        </small>
-                                    {% endif %}
-                                </td>
-                                <td>{{ alumno.email }}</td>
-                                <td>{{ alumno.telefono or '-' }}</td>
-                                <td>{{ alumno.ciudad or '-' }}</td>
-                                <td>
-                                    {% if alumno.is_active %}
-                                        <span class="badge badge-success">Activo</span>
-                                    {% else %}
-                                        <span class="badge badge-secondary">Inactivo</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm">
-                                        <a href="{{ url_for('admin.editar_alumno', alumno_id=alumno.id) }}" class="btn btn-outline-primary" title="Editar">Editar</a>
-                                        <form method="POST" action="{{ url_for('admin.eliminar_alumno', alumno_id=alumno.id) }}" style="display:inline;">
-                                            <button type="submit" class="btn btn-outline-danger" title="Eliminar">Eliminar</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
+                <div class="col-md-4">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h5>{{ pagination.items | selectattr('is_active') | list | length }}</h5>
+                            <p class="mb-0">Activos</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <h5>{{ pagination.items | selectattr('es_miembro_activo') | list | length }}</h5>
+                            <p class="mb-0">Miembros ILISB</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Tabla de alumnos #}
+            <div class="card">
+                <div class="card-body">
+                    {% if pagination and pagination.items %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre Completo</th>
+                                    <th>Email</th>
+                                    <th>Fecha Registro</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for alumno in pagination.items %}
+                                <tr>
+                                    <td>{{ alumno.id }}</td>
+                                    <td>
+                                        <strong>{{ alumno.first_name }} {{ alumno.last_name }}</strong>
+                                        <br><small class="text-muted">{{ alumno.username }}</small>
+                                    </td>
+                                    <td>{{ alumno.email }}</td>
+                                    <td>{{ alumno.date_joined.strftime('%Y-%m-%d') if alumno.date_joined else 'N/A' }}</td>
+                                    <td>
+                                        {% if alumno.is_active %}
+                                            <span class="badge bg-success">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        {% endif %}
+                                        {% if alumno.es_miembro_activo %}
+                                            <span class="badge bg-info">Miembro</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('admin.editar_alumno', alumno_id=alumno.id) }}" 
+                                               class="btn btn-outline-primary" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="#" class="btn btn-outline-secondary" title="Ver Cursos">
+                                                <i class="fas fa-graduation-cap"></i>
+                                            </a>
+                                            <button class="btn btn-outline-danger" title="Eliminar (Próximamente)" disabled>
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {# Paginación #}
+                    {% if pagination.pages > 1 %}
+                    <nav>
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.alumnos', page=pagination.prev_num) }}">Anterior</a>
+                            </li>
+                            {% for page_num in pagination.iter_pages() %}
+                                {% if page_num %}
+                                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                                        <a class="page-link" href="{{ url_for('admin.alumnos', page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                                {% endif %}
                             {% endfor %}
-                        </tbody>
-                    </table>
+                            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('admin.alumnos', page=pagination.next_num) }}">Siguiente</a>
+                            </li>
+                        </ul>
+                    </nav>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-users fa-3x mb-3"></i>
+                        <h5>No hay alumnos registrados</h5>
+                        <p>Comienza agregando tu primer alumno.</p>
+                        <a href="{{ url_for('admin.nuevo_alumno') }}" class="btn btn-primary mt-3">
+                            <i class="fas fa-user-plus"></i> Agregar Primer Alumno
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
-            {% else %}
-                <div class="alert alert-info text-center">
-                    <h4>No hay alumnos registrados</h4>
-                    <p>Parece que aún no hay alumnos en el sistema.</p>
-                    <a class="btn btn-primary" href="{{ url_for('admin.nuevo_alumno') }}">
-                        Registrar primer alumno
-                    </a>
-                </div>
-            {% endif %}
+            </div>
         </div>
     </div>
 </div>
-
 {% endblock %}

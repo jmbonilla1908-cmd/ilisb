@@ -1,14 +1,16 @@
 from flask import render_template, redirect, url_for, flash, request, make_response
 from flask_login import login_user, logout_user, current_user
 from werkzeug.exceptions import NotFound
+from werkzeug.utils import secure_filename
 from app import db
 from app.admin import bp
-from app.admin.decorators import admin_required, superuser_required
-from app.admin.forms import AdminLoginForm, DocenteForm, AlumnoForm, GrupoForm, CursoForm
+from app.admin.decorators import admin_required, superuser_required # type: ignore
+from app.admin.forms import AdminLoginForm, DocenteForm, AlumnoForm, GrupoForm, CursoForm, AdminUserForm
 from app.admin.models import User
 from app.cursos.models import Curso, Docente, Grupo
 from app.auth.models import Alumno
 import secrets
+import os
 from datetime import datetime, timezone
 from slugify import slugify
 
@@ -85,21 +87,47 @@ def dashboard():
 @admin_required  
 def users():
     """Gestión de usuarios administradores"""
-    users = User.query.order_by(User.created_at.desc()).all()
+    page = request.args.get('page', 1, type=int)
+    pagination = User.query.order_by(User.id.asc()).paginate(
+        page=page, per_page=15, error_out=False
+    )
     return render_template('admin/users.html', 
-                         title='Gestión de Usuarios', 
-                         users=users)
+                         title='Gestión de Usuarios', pagination=pagination)
 
+@bp.route('/user/nuevo', methods=['GET', 'POST'])
+@superuser_required
+def nuevo_usuario():
+    """Crear un nuevo usuario administrador."""
+    form = AdminUserForm()
+    if form.validate_on_submit():
+        user = User(
+            username=form.username.data,
+            full_name=form.full_name.data,
+            email=form.email.data,
+            is_active=form.is_active.data,
+            is_superuser=form.is_superuser.data
+        )
+        user.set_password(form.password.data)
+        try:
+            db.session.add(user)
+            db.session.commit()
+            flash(f'Usuario administrador "{user.username}" creado exitosamente.', 'success')
+            return redirect(url_for('admin.users'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al crear el usuario: {e}', 'danger')
+    return render_template('admin/form_user.html', title='Nuevo Administrador', form=form)
 
 @bp.route('/cursos')
 @admin_required
 def cursos():
     """Muestra la lista de cursos para administración."""
-    cursos = Curso.query.order_by(Curso.nombre).all()
+    page = request.args.get('page', 1, type=int)
+    pagination = Curso.query.order_by(Curso.id.asc()).paginate(
+        page=page, per_page=15, error_out=False
+    )
     return render_template(
-        'admin/admin_lista_cursos.html',
-        title='Gestión de Cursos',
-        cursos=cursos
+        'admin/cursos.html', title='Gestión de Cursos', pagination=pagination
     )
 
 @bp.route('/curso/nuevo', methods=['GET', 'POST'])
@@ -108,10 +136,25 @@ def nuevo_curso():
     """Crear un nuevo curso."""
     form = CursoForm()
     if form.validate_on_submit():
+        # Procesamiento de la imagen del banner
+        banner_filename = None
+        if form.banner.data:
+            f = form.banner.data
+            # Generar un nombre de archivo seguro y único
+            filename_base = secure_filename(slugify(form.nombre.data))
+            filename_ext = os.path.splitext(f.filename)[1]
+            banner_filename = f"{filename_base}_{secrets.token_hex(4)}{filename_ext}"
+            
+            # Guardar el archivo
+            upload_path = os.path.join(os.getcwd(), 'app', 'static', 'img', 'cursos', banner_filename)
+            f.save(upload_path)
+
         curso = Curso()
         form.populate_obj(curso)
         # Generar slug a partir del nombre
         curso.slug = slugify(curso.nombre)
+        if banner_filename:
+            curso.banner = banner_filename
         try:
             db.session.add(curso)
             db.session.commit()
@@ -150,10 +193,23 @@ def editar_curso(slug):
     
     if form.validate_on_submit():
         # Rellena el objeto 'curso' con los datos validados del formulario
-        original_slug = curso.slug
+        # Procesamiento de la imagen del banner si se sube una nueva
+        if form.banner.data:
+            f = form.banner.data
+            filename_base = secure_filename(slugify(form.nombre.data))
+            filename_ext = os.path.splitext(f.filename)[1]
+            banner_filename = f"{filename_base}_{secrets.token_hex(4)}{filename_ext}"
+            
+            upload_path = os.path.join(os.getcwd(), 'app', 'static', 'img', 'cursos', banner_filename)
+            f.save(upload_path)
+            
+            # Aquí podrías añadir lógica para borrar la imagen antigua si lo deseas
+            curso.banner = banner_filename
+
         form.populate_obj(curso)
         # Si el nombre cambia, actualizamos el slug
         curso.slug = slugify(curso.nombre)
+
         try:
             db.session.commit()
             flash(f'Curso "{curso.nombre}" actualizado exitosamente', 'success')
@@ -173,34 +229,40 @@ def editar_curso(slug):
 @admin_required
 def alumnos():
     """Gestión de alumnos"""
-    alumnos = Alumno.query.order_by(
-        Alumno.nombres, Alumno.apellidos
-    ).all()
+    page = request.args.get('page', 1, type=int)
+    pagination = Alumno.query.order_by(
+        Alumno.id.asc() # Mantenemos asc, ya estaba correcto
+    ).paginate(page=page, per_page=15, error_out=False)
+    
     return render_template('admin/alumnos.html',
                            title='Gestión de Alumnos',
-                           alumnos=alumnos)
+                           pagination=pagination)
 
 
 @bp.route('/docentes')
 @admin_required
 def docentes():
     """Gestión de docentes"""
-    docentes = Docente.query.order_by(
-        Docente.nombre
-    ).all()
+    page = request.args.get('page', 1, type=int)
+    pagination = Docente.query.order_by(Docente.id.asc()).paginate( # Mantenemos asc, ya estaba correcto
+        page=page, per_page=15, error_out=False
+    )
     return render_template('admin/docentes.html',
                            title='Gestión de Docentes',
-                           docentes=docentes)
+                           pagination=pagination)
 
 
 @bp.route('/grupos')
 @admin_required
 def grupos():
     """Gestión de grupos"""
-    grupos = Grupo.query.order_by(Grupo.id).all()
+    page = request.args.get('page', 1, type=int)
+    pagination = Grupo.query.order_by(Grupo.id.asc()).paginate( # Mantenemos asc, ya estaba correcto
+        page=page, per_page=15, error_out=False
+    )
     return render_template('admin/grupos.html',
                            title='Gestión de Grupos',
-                           grupos=grupos)
+                           pagination=pagination)
 
 
 @bp.route('/alumno/<int:alumno_id>/toggle-verificacion', methods=['POST'])

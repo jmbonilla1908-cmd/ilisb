@@ -1,78 +1,135 @@
-{% extends "admin/layout.html" %}
+{% extends "admin/_layout.html" %}
+
+{% block title %}Gestión de Administradores{% endblock %}
 
 {% block admin_content %}
 <div class="container-fluid">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h1>👥 Gestión de Usuarios Administradores</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Usuarios</li>
-                </ol>
-            </nav>
-        </div>
-    </div>
-
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Lista de Administradores</h5>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Gestión de Administradores</h2>
+                {# Solo los superusuarios pueden crear nuevos administradores #}
+                {% if current_user.is_superuser %}
+                    <a href="{{ url_for('admin.nuevo_usuario') }}" class="btn btn-primary">
+                        <i class="fas fa-user-shield"></i> Nuevo Administrador
+                    </a>
+                {% endif %}
+            </div>
+
+            {# Tarjetas de estadísticas #}
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <h5>{{ pagination.total or 0 }}</h5>
+                            <p class="mb-0">Total Administradores</p>
+                        </div>
+                    </div>
                 </div>
+                <div class="col-md-4">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h5>{{ pagination.items | selectattr('is_active') | list | length }}</h5>
+                            <p class="mb-0">Activos</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-warning text-dark">
+                        <div class="card-body">
+                            <h5>{{ pagination.items | selectattr('is_superuser') | list | length }}</h5>
+                            <p class="mb-0">Superusuarios</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Tabla de usuarios #}
+            <div class="card">
                 <div class="card-body">
-                    {% if users %}
+                    {% if pagination and pagination.items %}
                         <div class="table-responsive">
                             <table class="table table-striped">
                                 <thead>
                                     <tr>
                                         <th>ID</th>
                                         <th>Username</th>
-                                        <th>Nombre</th>
-                                        <th>Email</th>
                                         <th>Tipo</th>
                                         <th>Estado</th>
                                         <th>Creado</th>
                                         <th>Último Login</th>
+                                        <th>Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for user in users %}
+                                    {% for user in pagination.items %}
                                     <tr>
                                         <td>{{ user.id }}</td>
-                                        <td><strong>{{ user.username }}</strong></td>
-                                        <td>{{ user.full_name }}</td>
-                                        <td>{{ user.email }}</td>
+                                        <td>
+                                            <strong>{{ user.username }}</strong>
+                                            <br><small class="text-muted">{{ user.full_name }}</small>
+                                        </td>
                                         <td>
                                             {% if user.is_superuser %}
-                                                <span class="badge bg-warning text-dark">🔥 SUPER</span>
+                                                <span class="badge bg-warning text-dark">Superusuario</span>
                                             {% else %}
-                                                <span class="badge bg-primary">👤 ADMIN</span>
+                                                <span class="badge bg-primary">Admin</span>
                                             {% endif %}
                                         </td>
                                         <td>
                                             {% if user.is_active %}
-                                                <span class="badge bg-success">✅ Activo</span>
+                                                <span class="badge bg-success">Activo</span>
                                             {% else %}
-                                                <span class="badge bg-danger">❌ Inactivo</span>
+                                                <span class="badge bg-danger">Inactivo</span>
                                             {% endif %}
                                         </td>
                                         <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                                         <td>
                                             {% if user.last_login %}
-                                                {{ user.last_login.strftime('%Y-%m-%d %H:%M') }}
+                                                <small>{{ user.last_login.strftime('%Y-%m-%d %H:%M') }}</small>
                                             {% else %}
                                                 <em>Nunca</em>
                                             {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button class="btn btn-outline-primary" title="Editar (Próximamente)" disabled>
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
+
+                        {# Paginación #}
+                        {% if pagination.pages > 1 %}
+                        <nav>
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ url_for('admin.users', page=pagination.prev_num) }}">Anterior</a>
+                                </li>
+                                {% for page_num in pagination.iter_pages() %}
+                                    {% if page_num %}
+                                        <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                                            <a class="page-link" href="{{ url_for('admin.users', page=page_num) }}">{{ page_num }}</a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item disabled"><span class="page-link">…</span></li>
+                                    {% endif %}
+                                {% endfor %}
+                                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                                    <a class="page-link" href="{{ url_for('admin.users', page=pagination.next_num) }}">Siguiente</a>
+                                </li>
+                            </ul>
+                        </nav>
+                        {% endif %}
                     {% else %}
-                        <div class="alert alert-info">
-                            📭 No hay usuarios administradores registrados.
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-user-shield fa-3x mb-3"></i>
+                            <h5>No hay administradores registrados</h5>
                         </div>
                     {% endif %}
                 </div>
