@@ -15,6 +15,35 @@ from app import db
 # Precisión para los cálculos
 getcontext().prec = 50
 
+# --- DATOS PARA SELECCIÓN DE CABLE ---
+
+# Tabla de cables de cobre (AWG, mm², Resistencia Ohm/km @ 20°C, Ampacidad @ 30°C)
+TABLA_CABLES = [
+    {'awg': '14', 'mm2': 2.08, 'resistencia': 8.45, 'ampacidad': 25},
+    {'awg': '12', 'mm2': 3.31, 'resistencia': 5.31, 'ampacidad': 30},
+    {'awg': '10', 'mm2': 5.26, 'resistencia': 3.34, 'ampacidad': 40},
+    {'awg': '8', 'mm2': 8.37, 'resistencia': 2.1, 'ampacidad': 55},
+    {'awg': '6', 'mm2': 13.3, 'resistencia': 1.32, 'ampacidad': 75},
+    {'awg': '4', 'mm2': 21.15, 'resistencia': 0.83, 'ampacidad': 95},
+    {'awg': '2', 'mm2': 33.62, 'resistencia': 0.52, 'ampacidad': 130},
+    {'awg': '1', 'mm2': 42.41, 'resistencia': 0.41, 'ampacidad': 150},
+    {'awg': '1/0', 'mm2': 53.49, 'resistencia': 0.33, 'ampacidad': 170},
+    {'awg': '2/0', 'mm2': 67.43, 'resistencia': 0.26, 'ampacidad': 195},
+    {'awg': '3/0', 'mm2': 85.01, 'resistencia': 0.21, 'ampacidad': 225},
+    {'awg': '4/0', 'mm2': 107.2, 'resistencia': 0.16, 'ampacidad': 260},
+    {'awg': '250', 'mm2': 127, 'resistencia': 0.14, 'ampacidad': 290},
+    {'awg': '300', 'mm2': 152, 'resistencia': 0.12, 'ampacidad': 320},
+    {'awg': '350', 'mm2': 177, 'resistencia': 0.1, 'ampacidad': 350},
+    {'awg': '400', 'mm2': 203, 'resistencia': 0.09, 'ampacidad': 380},
+    {'awg': '500', 'mm2': 253, 'resistencia': 0.07, 'ampacidad': 430},
+]
+
+# Factores de corrección de temperatura para ampacidad
+FACTORES_TEMP = {
+    30: 1.0, 35: 0.94, 40: 0.88, 45: 0.82, 50: 0.75,
+    55: 0.67, 60: 0.58, 65: 0.47, 70: 0.35, 75: 0.0
+}
+
 ACCESORIOS = {
     'valvulas': {
         'nombre': 'Válvulas',
@@ -47,8 +76,8 @@ ACCESORIOS = {
     'transiciones': {
         'nombre': 'Reducciones y Ampliaciones',
         'items': {
-            'entrada_normal': {'nombre': 'Entrada Normal a Tubería', 'K': 0.5, 'imagen': 'img/accesorios/entrada_normal.jpg'},
-            'salida_tuberia': {'nombre': 'Salida de Tubería', 'K': 1.0, 'imagen': 'img/accesorios/salida_tuberia.jpg'},
+            'entrada_normal': {'nombre': 'Entrada Normal a Tubería', 'K': 0.5, 'imagen': 'img/accesorios/placeholder.svg'},
+            'salida_tuberia': {'nombre': 'Salida de Tubería', 'K': 1.0, 'imagen': 'img/accesorios/placeholder.svg'},
         }
     }
 }
@@ -177,47 +206,84 @@ def aplicativo_detail(slug):
     if aplicativo.template_file:
         # Pasamos el 'aplicativo' por si la plantilla específica lo necesita.
         # Para la calculadora, también pasamos el gráfico inicial.
-        if aplicativo.template_file == 'webapps/calculadora_curva.html':
-            # Obtenemos el valor de eficiencia del formulario, con 75 como valor por defecto.
-            eficiencia = request.args.get('eficiencia', 75, type=float)
+        if aplicativo.template_file == 'webapps/calculadora_curva_sistema.html':
+            args = request.args.copy()
+            
+            # --- Lógica para añadir/quitar puntos de la curva de bomba ---
+            q_bomba = args.getlist('q_bomba')
+            h_bomba = args.getlist('h_bomba')
 
-            # Obtenemos los parámetros del sistema del formulario de abajo
-            altura_estatica = request.args.get('altura_estatica', 15.0, type=float)
-            q_operacion = request.args.get('q_operacion', 40.0, type=float)
-            h_operacion = request.args.get('h_operacion', 35.0, type=float)
+            if 'add_point' in args:
+                q_bomba.append('')
+                h_bomba.append('')
+            elif 'remove_point' in args:
+                if len(q_bomba) > 3: # Mantenemos un mínimo de 3 puntos
+                    q_bomba.pop()
+                    h_bomba.pop()
+            
+            # Si no hay puntos, inicializamos con 3 vacíos
+            if not q_bomba:
+                q_bomba = ['0', '150', '100']
+                h_bomba = ['48', '30', '43']
 
-            # Generar la explicación para la curva del sistema
-            explicacion_sistema = None
+            # Actualizamos los args para que la plantilla los repinte
+            args.setlist('q_bomba', q_bomba)
+            args.setlist('h_bomba', h_bomba)
+
+            graph_html = "<div><p class='text-center p-5'>Ingrese los datos y haga clic en 'Graficar' para generar la curva.</p></div>"
+
             if 'calcular' in request.args:
                 try:
-                    if q_operacion > 0 and h_operacion > altura_estatica:
-                        K = (h_operacion - altura_estatica) / (q_operacion**2)
-                        explicacion_sistema = {
-                            'ecuacion': f"H_sistema = {altura_estatica:.2f} + {K:.4f} * Q²",
-                            'k_valor': f"{K:.4f}"
-                        }
-                except (ValueError, ZeroDivisionError):
-                    pass # No se genera explicación si los datos son inválidos
+                    # 1. Recopilar y limpiar puntos de la curva de la bomba
+                    puntos_q = [float(q) for q in args.getlist('q_bomba') if q]
+                    puntos_h = [float(h) for h in args.getlist('h_bomba') if h]
 
-            # Generar explicación para el BEP
-            explicacion_bep = None
-            if eficiencia > 0:
-                 # Lógica de ejemplo: BEP al X% del caudal máximo
-                caudal_max_bomba = 60 # Asumimos el caudal máximo de la curva de bomba fija
-                caudal_bep = (eficiencia / 100) * caudal_max_bomba
-                explicacion_bep = {
-                    'eficiencia': f"{eficiencia:.0f}%",
-                    'caudal_bep': f"{caudal_bep:.2f} m³/h"
-                }
+                    if len(puntos_q) < 3 or len(puntos_q) != len(puntos_h):
+                        flash('Debe ingresar al menos 3 puntos (Q, H) válidos para la curva de la bomba.', 'warning')
+                        return render_template(aplicativo.template_file, aplicativo=aplicativo, graph_html=graph_html, request=request)
 
-            # Generamos el gráfico SIEMPRE con el JS incluido, para no depender de scripts externos.
-            initial_graph_html = _crear_grafico_interactivo(
-                eficiencia_pct=eficiencia, incluir_js=True,
-                altura_estatica=altura_estatica,
-                q_operacion=q_operacion,
-                h_operacion=h_operacion
-            )
-            return render_template(aplicativo.template_file, aplicativo=aplicativo, graph_html=initial_graph_html, explicacion_sistema=explicacion_sistema, explicacion_bep=explicacion_bep)
+                    # 2. Recopilar datos del sistema
+                    cota = float(args.get('cota', 28.1))
+                    variacion_max = float(args.get('variacion_max', 6.0))
+                    metodo_sistema = args.get('metodo_sistema', 'po')
+
+                    # 3. Calcular K (coeficiente de resistencia del sistema)
+                    K = 0
+                    if metodo_sistema == 'po':
+                        q_op = float(args.get('q_operacion', 120))
+                        h_op = float(args.get('h_operacion', 38))
+                        if q_op > 0 and h_op > cota:
+                            K = (h_op - cota) / (q_op**2)
+                        else:
+                            flash('El punto de operación debe tener un caudal > 0 y una altura > altura estática.', 'warning')
+                    else: # metodo_hf
+                        q_hf = float(args.get('q_hf', 120))
+                        h_hf = float(args.get('h_hf', 10))
+                        if q_hf > 0:
+                            K = h_hf / (q_hf**2)
+                        else:
+                            flash('El caudal para el cálculo de pérdidas debe ser > 0.', 'warning')
+
+                    # 4. Recopilar datos interactivos
+                    frecuencia_hz = float(args.get('frecuencia_hz', 60))
+                    nivel_succion = float(args.get('nivel_succion', cota))
+
+                    # 5. Generar el gráfico
+                    graph_html = _crear_grafico_curva_sistema(
+                        puntos_q=puntos_q,
+                        puntos_h=puntos_h,
+                        cota=cota,
+                        variacion_max=variacion_max,
+                        K=K,
+                        frecuencia_actual=frecuencia_hz,
+                        nivel_actual=nivel_succion,
+                        incluir_js=True
+                    )
+                except (ValueError, TypeError, ZeroDivisionError) as e:
+                    flash(f'Error en los datos de entrada: {e}. Por favor, verifique los valores.', 'danger')
+
+            # Usamos los 'args' modificados para repintar el formulario
+            return render_template(aplicativo.template_file, aplicativo=aplicativo, graph_html=graph_html, request=args)
         
         elif aplicativo.template_file == 'webapps/calculadora_perdidas.html':
             resultados = None
@@ -296,7 +362,11 @@ def aplicativo_detail(slug):
                     flash('Por favor, ingrese valores numéricos válidos para el cálculo.', 'danger')
                     resultados = None
 
-            return render_template(aplicativo.template_file, aplicativo=aplicativo, accesorios=ACCESORIOS, resultados=resultados)
+            graph_html = None
+            if resultados:
+                graph_html = _crear_grafico_perdidas_accesorios(resultados['hf_tuberia'], resultados['hf_accesorios'], incluir_js=True)
+
+            return render_template(aplicativo.template_file, aplicativo=aplicativo, accesorios=ACCESORIOS, resultados=resultados, graph_html=graph_html)
 
         elif aplicativo.template_file == 'webapps/conversor_unidades.html':
             magnitud_activa = request.args.get('magnitud', 'caudal')
@@ -322,6 +392,100 @@ def aplicativo_detail(slug):
                                  unidad_origen=unidad_origen,
                                  resultados=resultados)
 
+        elif aplicativo.template_file == 'webapps/seleccion_cable_sumergible.html':
+            resultados = None
+            if 'calcular' in request.args:
+                try:
+                    # 1. Recopilar datos
+                    alim = float(request.args.get('alim'))
+                    volt = float(request.args.get('volt'))
+                    amper = float(request.args.get('amper'))
+                    f_potencia = float(request.args.get('f_potencia'))
+                    temp = int(request.args.get('temperatura'))
+                    t_arranque = float(request.args.get('t_arranque'))
+                    long_cable = float(request.args.get('long_cable'))
+
+                    # 2. Calcular amperaje corregido por temperatura
+                    factor_temp = FACTORES_TEMP.get(temp - (temp % 5), 1.0) # Redondea hacia abajo al múltiplo de 5 más cercano
+                    amperaje_corregido = amper / factor_temp if factor_temp > 0 else float('inf')
+
+                    # 3. Calcular caída de voltaje para cada cable
+                    tabla_resultados = []
+                    for cable in TABLA_CABLES:
+                        # Resistencia corregida por temperatura (cobre)
+                        resistencia_corregida = cable['resistencia'] * (1 + 0.00393 * (temp - 20))
+                        
+                        # Caída de voltaje
+                        caida_v = (alim * amper * long_cable * resistencia_corregida) / 1000
+                        caida_porc = (caida_v / volt) * 100
+
+                        # Determinar clase CSS para resaltar
+                        clase = ''
+                        if amperaje_corregido > cable['ampacidad']:
+                            clase = 'table-danger'
+                        elif caida_porc > 5.0:
+                            clase = 'table-danger'
+                        elif caida_porc > 3.0:
+                            clase = 'table-warning'
+                        else:
+                            clase = 'table-success'
+
+                        tabla_resultados.append({**cable, 'caida_voltaje': caida_porc, 'clase_css': clase})
+                    
+                    resultados = {
+                        'amperaje_corregido': amperaje_corregido,
+                        'tabla': tabla_resultados
+                    }
+                except (ValueError, TypeError, ZeroDivisionError) as e:
+                    flash(f'Error en los datos de entrada: {e}. Por favor, verifique los valores.', 'danger')
+
+            return render_template(aplicativo.template_file, aplicativo=aplicativo, resultados=resultados)
+
+        elif aplicativo.template_file == 'webapps/calculadora_sumergencia.html':
+            resultados = None
+            if 'calcular' in request.args:
+                try:
+                    # 1. Recopilar y estandarizar unidades
+                    caudal_valor = float(request.args.get('caudal_valor'))
+                    caudal_unidad = request.args.get('caudal_unidad')
+                    diametro_valor = float(request.args.get('diametro_valor'))
+                    diametro_unidad = request.args.get('diametro_unidad')
+
+                    # Convertir todo a pies y ft³/s
+                    if caudal_unidad == 'gpm':
+                        Q_cfs = caudal_valor / 448.831
+                    elif caudal_unidad == 'l/s':
+                        Q_cfs = caudal_valor / 28.317
+                    else: # m3/h
+                        Q_cfs = caudal_valor / 101.94
+
+                    if diametro_unidad == 'in':
+                        D_ft = diametro_valor / 12
+                    else: # mm
+                        D_ft = diametro_valor / 304.8
+
+                    # 2. Realizar cálculos
+                    g = 32.2  # Aceleración de la gravedad en ft/s²
+                    area = np.pi * (D_ft**2) / 4
+                    V_fps = Q_cfs / area
+                    Fr = V_fps / np.sqrt(g * D_ft) # Número de Froude
+
+                    # Sumergencia mínima S = D * (1 + 2.3 * Fr)
+                    S_ft = D_ft * (1 + 2.3 * Fr)
+
+                    resultados = {
+                        'S': S_ft * 12,      # Convertir a pulgadas para mostrar
+                        'D': D_ft * 12,      # Convertir a pulgadas para mostrar
+                        'C': (D_ft / 2) * 12, # C = D/2
+                        'B': (D_ft * 1.5) * 12, # B = 1.5D
+                        'V': V_fps,
+                        'Fr': Fr
+                    }
+                except (ValueError, TypeError, ZeroDivisionError) as e:
+                    flash(f'Error en los datos de entrada: {e}. Por favor, verifique los valores.', 'danger')
+            
+            return render_template(aplicativo.template_file, aplicativo=aplicativo, resultados=resultados)
+
         return render_template(aplicativo.template_file, aplicativo=aplicativo)
     
     # Si no, mostramos la página de detalle genérica (comportamiento anterior).
@@ -329,6 +493,84 @@ def aplicativo_detail(slug):
 
 
 # --- NUEVAS RUTAS PARA LA CALCULADORA INTERACTIVA CON PLOTLY Y HTMX ---
+
+def _crear_grafico_curva_sistema(puntos_q, puntos_h, cota, variacion_max, K, frecuencia_actual, nivel_actual, incluir_js=False):
+    fig = go.Figure()
+
+    # 1. Ajustar curva de la bomba a un polinomio de 2do grado
+    # H = A*Q^2 + B*Q + C
+    coeffs = np.polyfit(puntos_q, puntos_h, 2)
+    poly_bomba = np.poly1d(coeffs)
+
+    # Generar puntos suaves para la curva de la bomba
+    q_max_bomba = max(puntos_q)
+    q_bomba_range = np.linspace(0, q_max_bomba, 100)
+    h_bomba_range = poly_bomba(q_bomba_range)
+
+    # Curva de la bomba a 60Hz (nominal)
+    fig.add_trace(go.Scatter(x=q_bomba_range, y=h_bomba_range, mode='lines', name='Bomba @ 60Hz', line=dict(color='blue')))
+
+    # 2. Curva de la bomba ajustada a la frecuencia actual
+    ratio_frec = frecuencia_actual / 60.0
+    q_bomba_adj = q_bomba_range * ratio_frec
+    h_bomba_adj = h_bomba_range * (ratio_frec**2)
+    fig.add_trace(go.Scatter(x=q_bomba_adj, y=h_bomba_adj, mode='lines', name=f'Bomba @ {frecuencia_actual}Hz', line=dict(color='red', dash='dash')))
+
+    # 3. Curvas del sistema
+    # H_sys = H_estatica + K*Q^2
+    q_sistema_range = np.linspace(0, max(q_bomba_adj) * 1.1, 100)
+    
+    # Nivel máximo (altura estática mínima)
+    h_sys_max = (cota - variacion_max) + K * (q_sistema_range**2)
+    fig.add_trace(go.Scatter(x=q_sistema_range, y=h_sys_max, mode='lines', name='Sistema (Nivel Máx)', line=dict(color='orange', dash='dot')))
+
+    # Nivel mínimo (altura estática máxima)
+    h_sys_min = cota + K * (q_sistema_range**2)
+    fig.add_trace(go.Scatter(x=q_sistema_range, y=h_sys_min, mode='lines', name='Sistema (Nivel Mín)', line=dict(color='brown', dash='dot')))
+
+    # Nivel actual
+    h_sys_actual = (cota - (cota - nivel_actual)) + K * (q_sistema_range**2)
+    fig.add_trace(go.Scatter(x=q_sistema_range, y=h_sys_actual, mode='lines', name='Sistema (Nivel Actual)', line=dict(color='green', width=3)))
+
+    # 4. Encontrar y marcar el punto de operación (intersección)
+    # H_bomba_adj(Q) = H_sys_actual(Q) -> (A*r^2 - K)*Q^2 + (B*r)*Q + (C*r^2 - H_est_actual) = 0
+    h_est_actual = (cota - (cota - nivel_actual))
+    poly_interseccion = np.poly1d([coeffs[0]*(ratio_frec**2) - K, coeffs[1]*ratio_frec, coeffs[2]*(ratio_frec**2) - h_est_actual])
+    raices = poly_interseccion.roots
+    q_operacion_real = max(r.real for r in raices if r.imag == 0 and r.real > 0)
+    if q_operacion_real:
+        h_operacion_real = h_est_actual + K * (q_operacion_real**2)
+        fig.add_trace(go.Scatter(x=[q_operacion_real], y=[h_operacion_real], mode='markers', name='Punto de Operación',
+                                 marker=dict(color='purple', size=15, symbol='star')))
+
+    # Puntos originales ingresados
+    fig.add_trace(go.Scatter(x=puntos_q, y=puntos_h, mode='markers', name='Puntos Ingresados', marker=dict(color='grey')))
+
+    fig.update_layout(
+        title="Análisis de Curva de Bomba vs. Curva de Sistema",
+        xaxis_title="Caudal (Q)",
+        yaxis_title="Altura (H)",
+        template="plotly_white"
+    )
+    return pio.to_html(fig, full_html=False, include_plotlyjs=incluir_js)
+
+def _crear_grafico_perdidas_accesorios(hf_tuberia, hf_accesorios, incluir_js=False):
+    """Genera un gráfico de pastel para la distribución de pérdidas."""
+    labels = ['Pérdida por Fricción (Tubería)', 'Pérdidas Menores (Accesorios)']
+    values = [hf_tuberia, hf_accesorios]
+
+    fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.3,
+                                 textinfo='label+percent',
+                                 hovertemplate='<b>%{label}</b><br>Pérdida: %{value:.2f} m<br>Contribución: %{percent}<extra></extra>')])
+
+    fig.update_layout(
+        title_text="Distribución de Pérdidas de Carga",
+        template="plotly_white",
+        legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
+    )
+
+    return pio.to_html(fig, full_html=False, include_plotlyjs=incluir_js)
+
 
 def _crear_grafico_perdidas(Q_calculado_lps, hf_calculado_m, D_m, L_m, C, incluir_js=False):
     """Genera un gráfico de Plotly para la curva de pérdidas por fricción."""
@@ -368,78 +610,6 @@ def _crear_grafico_perdidas(Q_calculado_lps, hf_calculado_m, D_m, L_m, C, inclui
         yaxis_title="Pérdida de Carga (m)",
         template="plotly_white"
     )
-    return pio.to_html(fig, full_html=False, include_plotlyjs=incluir_js)
-
-def _crear_grafico_interactivo(eficiencia_pct=None, incluir_js=False, altura_estatica=None, q_operacion=None, h_operacion=None):
-    # Volvemos a usar una curva de bomba fija para el ejemplo.
-    caudal_puntos = [0, 10, 20, 30, 40, 50, 60]
-    altura_puntos = [60, 58, 52, 45, 35, 23, 10]
-
-    fig = go.Figure()
-
-    # Añadir la curva principal de la bomba
-    fig.add_trace(go.Scatter(
-        x=caudal_puntos, 
-        y=altura_puntos, 
-        mode='lines+markers', 
-        name='Curva H-Q',
-        line=dict(shape='spline', smoothing=1.3) # Curva suave
-    ))
-
-    # Si se pasa una eficiencia, calcular y marcar el BEP
-    if eficiencia_pct is not None and 0 < eficiencia_pct <= 100:
-        try:
-            # Lógica de ejemplo: BEP al X% del caudal máximo
-            caudal_bep = (eficiencia_pct / 100) * max(caudal_puntos)
-            # Interpolación lineal simple para encontrar la altura
-            altura_bep = np.interp(caudal_bep, caudal_puntos, altura_puntos)
-            
-            fig.add_trace(go.Scatter(
-                x=[caudal_bep], 
-                y=[altura_bep], 
-                mode='markers', 
-                name=f'BEP ({eficiencia_pct}%)',
-                marker=dict(color='red', size=12, symbol='star')
-            ))
-        except (ValueError, IndexError):
-            pass # No se muestra el punto si hay error
-
-    # Si se proporcionan los parámetros del sistema, calcular y dibujar la curva.
-    if all(v is not None for v in [altura_estatica, q_operacion, h_operacion]):
-        try:
-            # Para la curva del sistema H_sys = H_estatica + K*Q^2
-            # Usamos el punto de operación para calcular la constante de fricción K.
-            if q_operacion > 0 and h_operacion > altura_estatica:
-                K = (h_operacion - altura_estatica) / (q_operacion**2)
-                
-                q_sistema = np.linspace(0, max(caudal_puntos) * 1.1, 50) # Generar puntos para la curva
-                h_sistema = altura_estatica + K * (q_sistema**2)
-                
-                fig.add_trace(go.Scatter(
-                    x=q_sistema,
-                    y=h_sistema,
-                    mode='lines',
-                    name=f'Curva Sistema (K={K:.4f})',
-                    line=dict(color='green', dash='dash')
-                ))
-            else:
-                flash('Los datos del punto de operación no son válidos para calcular la curva del sistema.', 'warning')
-
-        except (np.linalg.LinAlgError, ValueError, IndexError):
-            # Si hay un error en el cálculo, simplemente no se dibuja la curva del sistema.
-            pass
-
-    # Configurar el diseño del gráfico
-    fig.update_layout(
-        title="Calculadora Interactiva de Curva de Bomba",
-        xaxis_title="Caudal (m³/h)",
-        yaxis_title="Altura (m)",
-        template="plotly_white",
-        legend=dict(yanchor="top", y=0.99, xanchor="left", x=0.01),
-        margin=dict(l=20, r=20, t=40, b=20) # Ajustar márgenes
-    )
-    
-    # Convertir a HTML. include_plotlyjs=False es importante para las actualizaciones de HTMX
     return pio.to_html(fig, full_html=False, include_plotlyjs=incluir_js)
 
 

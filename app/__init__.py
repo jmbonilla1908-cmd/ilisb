@@ -98,15 +98,23 @@ def create_app(config_name='config.DevelopmentConfig'):
         - Controla la cantidad de decimales.
         """
         try:
-            # 1. Formatear a string con punto decimal, sin separadores de miles.
-            formatted_str = f"{value:.{precision}f}"
+            # 1. Formatear a string con la precisión deseada, forzando el punto decimal.
+            # Esto asegura que el separador decimal sea siempre un punto.
+            formatted_str = format(float(value), f'.{precision}f')
             
-            # 2. Separar parte entera y decimal.
-            integer_part, decimal_part = formatted_str.split('.')
+            # 2. Separar la parte entera de la decimal.
+            parts = formatted_str.split('.')
+            integer_part = parts[0]
+            decimal_part = parts[1]
             
-            # 3. Añadir comas a la parte entera.
-            integer_part_with_commas = f"{int(integer_part):,}"
-            return f"{integer_part_with_commas}.{decimal_part}"
+            # 3. Lógica manual para insertar comas en la parte entera.
+            # Esto evita usar cualquier formateador sensible a la región.
+            if len(integer_part) > 3:
+                reversed_integer = integer_part[::-1]
+                with_commas = ','.join(reversed_integer[i:i+3] for i in range(0, len(reversed_integer), 3))
+                integer_part = with_commas[::-1]
+
+            return f"{integer_part}.{decimal_part}"
         except (ValueError, TypeError):
             return value # Devuelve el valor original si no se puede formatear
 

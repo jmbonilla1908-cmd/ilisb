@@ -12,19 +12,19 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="caudal" class="form-label">Caudal (L/s)</label>
-                        <input type="number" step="any" class="form-control" id="caudal" name="caudal" value="{{ request.args.get('caudal', 50) }}">
+                        <input type="text" inputmode="decimal" class="form-control" id="caudal" name="caudal" value="{{ request.args.get('caudal', 50) }}">
                     </div>
                     <div class="col-md-6">
                         <label for="diametro" class="form-label">Diámetro Interno (mm)</label>
-                        <input type="number" step="any" class="form-control" id="diametro" name="diametro" value="{{ request.args.get('diametro', 150) }}">
+                        <input type="text" inputmode="decimal" class="form-control" id="diametro" name="diametro" value="{{ request.args.get('diametro', 150) }}">
                     </div>
                     <div class="col-md-6">
                         <label for="longitud" class="form-label">Longitud de Tubería (m)</label>
-                        <input type="number" step="any" class="form-control" id="longitud" name="longitud" value="{{ request.args.get('longitud', 1000) }}">
+                        <input type="text" inputmode="decimal" class="form-control" id="longitud" name="longitud" value="{{ request.args.get('longitud', 1000) }}">
                     </div>
                     <div class="col-md-6">
                         <label for="coeficiente_c" class="form-label">Coeficiente C de Hazen-Williams</label>
-                        <input type="number" step="any" class="form-control" id="coeficiente_c" name="coeficiente_c" value="{{ request.args.get('coeficiente_c', 140) }}">
+                        <input type="text" inputmode="decimal" class="form-control" id="coeficiente_c" name="coeficiente_c" value="{{ request.args.get('coeficiente_c', 140) }}">
                     </div>
                 </div>
                 <div class="mt-4">

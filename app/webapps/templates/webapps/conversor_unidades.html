@@ -26,7 +26,7 @@
                 {# Campo para introducir el valor a convertir #}
                 <div class="col-md-4">
                     <label for="valor_entrada" class="form-label">Valor a Convertir</label>
-                    <input type="number" step="any" class="form-control" id="valor_entrada" name="valor_entrada" value="{{ valor_entrada or '' }}" required>
+                    <input type="text" inputmode="decimal" class="form-control" id="valor_entrada" name="valor_entrada" value="{{ valor_entrada or '' }}" required>
                 </div>
 
                 {# Selector para la unidad de origen #}
@@ -79,12 +79,12 @@
 {% endblock %}
 
 {% block instrucciones_content %}
-    <p>{{ aplicativo.descripcion }}</p>
-    <hr>
+    <p>Ahorre tiempo y simplifique sus conversiones con nuestra herramienta líder en el mercado. Diseñada para todos, nuestro aplicativo ofrece:</p>
     <ol>
-        <li>Seleccione la magnitud física que desea convertir (ej. Presión, Potencia).</li>
-        <li>Ingrese el valor numérico que conoce.</li>
-        <li>Seleccione la unidad de origen de su valor.</li>
-        <li>Haga clic en "Convertir" para ver los resultados en todas las unidades equivalentes.</li>
+        <li>Facilidad y conveniencia: Olvídese de las búsquedas en tablas o los cálculos manuales. Con nuestra herramienta, realice conversiones rápidas y precisas en cualquier momento y lugar.</li>
+        <li>Convertir entre una variedad de unidades: Desde longitud, masa, tiempo, temperatura, volumen, velocidad, presión u otras unidades, nuestro aplicativo lo cubre todo.</li>
+        <li>Interfaz amigable e intuitiva: Nuestra interfaz simplificada le permite realizar conversiones de manera sencilla, sin importar su nivel de experiencia.</li>
+        <li>Simplemente ingrese el valor, seleccione la unidad de origen y haga clic en "Convertir" para obtener instantáneamente la conversión a múltiples unidades en una sola pantalla.</li>
     </ol>
+    <p>Simplifique sus tareas diarias y mejore su productividad con nuestro aplicativo líder en el mercado.</p>
 {% endblock %}

@@ -1,5 +1,5 @@
 from app import db
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class TipoAnuncio(db.Model):
@@ -52,7 +52,7 @@ class AliadoEstrategico(db.Model):
     fecha_alianza = db.Column('fecha_alianza', db.Date)
     fecha_registro = db.Column(
         'fecha_registro', db.TIMESTAMP,
-        default=datetime.utcnow, nullable=False
+        default=datetime.now(timezone.utc), nullable=False
     )
     
     def __repr__(self):
@@ -112,7 +112,7 @@ class Anuncio(db.Model):
     enlace_url = db.Column('enlace', db.String(500))
     fecha_inicio = db.Column(
         'fechainicio', db.TIMESTAMP,
-        default=datetime.utcnow, nullable=False
+        default=datetime.now(timezone.utc), nullable=False
     )
     fecha_fin = db.Column('fechafin', db.TIMESTAMP)
     activo = db.Column('activo', db.Boolean, default=True, nullable=False)
@@ -123,7 +123,7 @@ class Anuncio(db.Model):
     clics = db.Column('clics', db.Integer, default=0, nullable=False)
     fecha_registro = db.Column(
         'fecharegistro', db.TIMESTAMP,
-        default=datetime.utcnow, nullable=False
+        default=datetime.now(timezone.utc), nullable=False
     )
     
     def __repr__(self):
@@ -132,7 +132,7 @@ class Anuncio(db.Model):
     @property
     def esta_vigente(self):
         """Verifica si el anuncio está en fechas válidas."""
-        ahora = datetime.utcnow()
+        ahora = datetime.now(timezone.utc)
         inicio_valido = self.fecha_inicio <= ahora
         fin_valido = (self.fecha_fin is None or
                       self.fecha_fin >= ahora)

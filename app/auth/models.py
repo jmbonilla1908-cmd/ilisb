@@ -1,5 +1,6 @@
 from app import db, login_manager
 from flask_login import UserMixin
+from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 
 # Esta función es requerida por Flask-Login para cargar un usuario desde la sesión
@@ -63,7 +64,7 @@ class Alumno(UserMixin, db.Model):
         from datetime import datetime
         membresia_activa = self.membresias.filter(
             AlumnoMembresia.revertido == False,
-            AlumnoMembresia.fecha_fin >= datetime.utcnow()
+            AlumnoMembresia.fecha_fin >= datetime.now(timezone.utc)
         ).first()
         return membresia_activa is not None
 

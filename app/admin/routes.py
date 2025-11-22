@@ -9,7 +9,7 @@ from app.admin.models import User
 from app.cursos.models import Curso, Docente, Grupo
 from app.auth.models import Alumno
 import secrets
-from datetime import datetime
+from datetime import datetime, timezone
 from slugify import slugify
 
 
@@ -37,7 +37,7 @@ def login():
         login_user(user, remember=form.remember_me.data)
         # Actualizar último login
         from datetime import datetime
-        user.last_login = datetime.utcnow()
+        user.last_login = datetime.now(timezone.utc)
         db.session.commit()
         
         flash(f'Bienvenido, {user.full_name}', 'success')

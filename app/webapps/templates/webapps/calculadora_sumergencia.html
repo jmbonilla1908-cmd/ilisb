@@ -1,0 +1,103 @@
+{% extends "webapps/base_aplicativo.html" %}
+
+{% block title %}{{ aplicativo.nombre }}{% endblock %}
+
+{% block aplicativo_content %}
+<div class="row">
+    <!-- Columna de Parámetros -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0">Parámetros de Diseño</h5></div>
+            <div class="card-body">
+                <form action="" method="GET">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Caudal Bombeado (Q)</label>
+                        <div class="input-group">
+                            <input type="text" inputmode="decimal" class="form-control" name="caudal_valor" value="{{ request.args.get('caudal_valor', '1000') }}">
+                            <select class="form-select" name="caudal_unidad">
+                                <option value="gpm" {% if request.args.get('caudal_unidad', 'gpm') == 'gpm' %}selected{% endif %}>GPM</option>
+                                <option value="l/s" {% if request.args.get('caudal_unidad') == 'l/s' %}selected{% endif %}>l/s</option>
+                                <option value="m3/h" {% if request.args.get('caudal_unidad') == 'm3/h' %}selected{% endif %}>m³/h</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Diámetro de Succión (D)</label>
+                        <div class="input-group">
+                            <input type="text" inputmode="decimal" class="form-control" name="diametro_valor" value="{{ request.args.get('diametro_valor', '6') }}">
+                            <select class="form-select" name="diametro_unidad">
+                                <option value="in" {% if request.args.get('diametro_unidad', 'in') == 'in' %}selected{% endif %}>pulgadas</option>
+                                <option value="mm" {% if request.args.get('diametro_unidad') == 'mm' %}selected{% endif %}>mm</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" name="calcular" value="1" class="btn btn-primary">Calcular</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Columna de Resultados -->
+    <div class="col-lg-8">
+        {% if resultados %}
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0">Resultados y Dimensiones Recomendadas</h5></div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-7">
+                        <img src="{{ url_for('static', filename='img/sumergencia.svg') }}" class="img-fluid" alt="Esquema de sumergencia">
+                    </div>
+                    <div class="col-md-5">
+                        <h6 class="text-primary">Sumergencia Mínima (S)</h6>
+                        <p class="display-6">{{ resultados.S|format_number(2) }} <span class="fs-5 text-muted">pulg</span></p>
+
+                        <h6 class="mt-4">Dimensiones Recomendadas</h6>
+                        <ul class="list-group">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Diámetro de Succión (D)
+                                <span class="badge bg-secondary rounded-pill">{{ resultados.D|format_number(2) }} pulg</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Distancia al Fondo (C)
+                                <span class="badge bg-secondary rounded-pill">{{ resultados.C|format_number(2) }} pulg</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Distancia a la Pared (B)
+                                <span class="badge bg-secondary rounded-pill">{{ resultados.B|format_number(2) }} pulg</span>
+                            </li>
+                        </ul>
+                        <hr>
+                        <small class="text-muted">
+                            Velocidad de flujo: {{ resultados.V|format_number(2) }} ft/s <br>
+                            Número de Froude: {{ resultados.Fr|format_number(3) }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card card-body text-center">
+            <p class="lead">Ingrese los parámetros y haga clic en "Calcular" para ver los resultados.</p>
+            <img src="{{ url_for('static', filename='img/sumergencia.svg') }}" class="img-fluid opacity-50" alt="Esquema de sumergencia">
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block instrucciones_titulo %}{{ aplicativo.nombre }}{% endblock %}
+{% block instrucciones_content %}
+<p>{{ aplicativo.descripcion }}</p>
+<hr>
+<ol>
+    <li>Ingrese el caudal de diseño de la bomba y sus unidades.</li>
+    <li>Ingrese el diámetro nominal de la tubería de succión y sus unidades.</li>
+    <li>Haga clic en "Calcular".</li>
+    <li>La herramienta mostrará la sumergencia mínima requerida (S) y otras dimensiones importantes para el pozo de succión, ayudando a prevenir problemas hidráulicos.</li>
+</ol>
+<p class="small text-muted">Los cálculos se basan en la fórmula S = D * (1 + 2.3 * Fr), donde Fr es el número de Froude.</p>
+{% endblock %}

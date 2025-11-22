@@ -1,5 +1,5 @@
 from app import db
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class TipoAplicativo(db.Model):
@@ -61,11 +61,11 @@ class Aplicativo(db.Model):
     vistas = db.Column('vistas', db.Integer, default=0, nullable=False)
     fecha_registro = db.Column(
         'fecharegistro', db.TIMESTAMP,
-        default=datetime.utcnow, nullable=False
+        default=lambda: datetime.now(timezone.utc), nullable=False
     )
     fecha_actualizacion = db.Column(
         'fechaactualizacion', db.TIMESTAMP,
-        default=datetime.utcnow, onupdate=datetime.utcnow
+        default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc)
     )
     
     # Metadatos para SEO
@@ -111,7 +111,7 @@ class Aplicativo(db.Model):
     
     @classmethod
     def obtener_recientes(cls, limite=5):
-        """Obtiene aplicativos más recientes."""
+        """Obtiene los aplicativos más recientemente actualizados o creados."""
         return (cls.query.filter_by(activo=True)
-                .order_by(cls.fecha_registro.desc())
+                .order_by(cls.fecha_actualizacion.desc())
                 .limit(limite).all())

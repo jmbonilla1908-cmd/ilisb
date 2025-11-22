@@ -1,7 +1,7 @@
 from app import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class User(UserMixin, db.Model):
@@ -22,7 +22,7 @@ class User(UserMixin, db.Model):
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     is_superuser = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(
-        db.DateTime, default=datetime.utcnow, nullable=False
+        db.DateTime, default=datetime.now(timezone.utc), nullable=False
     )
     last_login = db.Column(db.DateTime)
     
@@ -80,7 +80,7 @@ class ConfiguracionApp(db.Model):
     es_publico = db.Column('publico', db.Boolean, default=False)
     fecha_actualizacion = db.Column(
         'fecha_actualizacion', db.TIMESTAMP,
-        default=datetime.utcnow, onupdate=datetime.utcnow
+        default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc)
     )
 
     def __repr__(self):
@@ -125,7 +125,7 @@ class Auditoria(db.Model):
     user_agent = db.Column('user_agent', db.String(500))
     fecha_registro = db.Column(
         'fecha', db.TIMESTAMP,
-        default=datetime.utcnow, nullable=False
+        default=datetime.now(timezone.utc), nullable=False
     )
     
     # Relación
@@ -155,7 +155,7 @@ class Notificacion(db.Model):
     enlace = db.Column('enlace', db.String(500))
     fecha_creacion = db.Column(
         'fecha_creacion', db.TIMESTAMP,
-        default=datetime.utcnow, nullable=False
+        default=datetime.now(timezone.utc), nullable=False
     )
     fecha_lectura = db.Column('fecha_lectura', db.TIMESTAMP)
 
@@ -165,7 +165,7 @@ class Notificacion(db.Model):
     def marcar_leida(self):
         """Marca notificación como leída."""
         self.leida = True
-        self.fecha_lectura = datetime.utcnow()
+        self.fecha_lectura = datetime.now(timezone.utc)
         db.session.commit()
     
     @classmethod
