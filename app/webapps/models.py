@@ -14,6 +14,7 @@ class TipoAplicativo(db.Model):
     descripcion = db.Column('descripcion', db.Text)
     icono = db.Column('icono', db.String(100))  # CSS class o imagen
     color = db.Column('color', db.String(20))   # Color hex para UI
+    orden = db.Column('orden', db.Integer, default=99, nullable=False)
     activo = db.Column('activo', db.Boolean, default=True, nullable=False)
     
     # Relación inversa

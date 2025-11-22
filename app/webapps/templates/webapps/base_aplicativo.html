@@ -5,26 +5,30 @@
     <div class="row">
         <!-- Columna Izquierda: Navegación de Aplicativos -->
         <div class="col-lg-2 d-none d-lg-block">
-            <h5>Aplicativos</h5>
-            <div class="accordion" id="accordionAplicativos">
-                {% for t in tipos %}
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id="heading-{{ t.id }}">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ t.id }}" aria-expanded="false" aria-controls="collapse-{{ t.id }}">
-                            {{ t.nombre }}
-                        </button>
-                    </h2>
-                    <div id="collapse-{{ t.id }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ t.id }}" data-bs-parent="#accordionAplicativos">
-                        <div class="list-group list-group-flush">
-                            {% for app in t.aplicativos %}
-                                <a href="{{ url_for('webapps.aplicativo_detail', slug=app.slug) }}" class="list-group-item list-group-item-action {% if aplicativo and aplicativo.id == app.id %}active{% endif %}">
-                                    {{ app.nombre }}
-                                </a>
-                            {% endfor %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Herramientas de cálculo online</h5>
+                </div>
+                <div class="accordion" id="accordionAplicativos">
+                    {% for t in tipos %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="heading-{{ t.id }}">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ t.id }}" aria-expanded="false" aria-controls="collapse-{{ t.id }}">
+                                {{ t.nombre }}
+                            </button>
+                        </h2>
+                        <div id="collapse-{{ t.id }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ t.id }}" data-bs-parent="#accordionAplicativos">
+                            <div class="list-group list-group-flush">
+                                {% for app in t.aplicativos %}
+                                    <a href="{{ url_for('webapps.aplicativo_detail', slug=app.slug) }}" class="list-group-item list-group-item-action {% if aplicativo and aplicativo.id == app.id %}active{% endif %}">
+                                        {{ app.nombre }}
+                                    </a>
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
         </div>
 

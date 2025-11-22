@@ -157,8 +157,9 @@ def convertir_unidades(valor, unidad_origen, magnitud):
 def index():
     """Página principal de aplicativos web."""
     populares = Aplicativo.obtener_populares(limite=6)
-    recientes = Aplicativo.obtener_recientes(limite=6)
-    return render_template('webapps/index.html', populares=populares, recientes=recientes)
+    recientes = Aplicativo.obtener_recientes(limite=6)    
+    tipos_menu = TipoAplicativo.query.order_by(TipoAplicativo.orden).all()
+    return render_template('webapps/index.html', populares=populares, recientes=recientes, tipos=tipos_menu)
 
 
 @bp.route('/tipo/<slug>')
@@ -182,7 +183,10 @@ def por_tipo(slug):
 @bp.route('/<slug>')
 def aplicativo_detail(slug):
     """Vista detalle de un aplicativo específico."""
-    aplicativo = Aplicativo.query.filter(
+    # Obtenemos todos los tipos para el menú lateral, ordenados por el nuevo campo 'orden'
+    tipos_menu = TipoAplicativo.query.order_by(TipoAplicativo.orden).all()
+
+    aplicativo = Aplicativo.query.join(TipoAplicativo).filter(
         db.func.lower(db.func.replace(
             db.func.replace(Aplicativo.nombre, ' ', '-'), 
             '_', '-'
@@ -204,7 +208,7 @@ def aplicativo_detail(slug):
     # --- LÓGICA MEJORADA ---
     # Si el aplicativo tiene un archivo de plantilla específico, lo usamos.
     if aplicativo.template_file:
-        # Pasamos el 'aplicativo' por si la plantilla específica lo necesita.
+        # Pasamos 'aplicativo' y 'tipos_menu' a todas las plantillas de aplicativos
         # Para la calculadora, también pasamos el gráfico inicial.
         if aplicativo.template_file == 'webapps/calculadora_curva_sistema.html':
             args = request.args.copy()
@@ -240,7 +244,7 @@ def aplicativo_detail(slug):
 
                     if len(puntos_q) < 3 or len(puntos_q) != len(puntos_h):
                         flash('Debe ingresar al menos 3 puntos (Q, H) válidos para la curva de la bomba.', 'warning')
-                        return render_template(aplicativo.template_file, aplicativo=aplicativo, graph_html=graph_html, request=request)
+                        return render_template(aplicativo.template_file, aplicativo=aplicativo, graph_html=graph_html, request=request, tipos=tipos_menu)
 
                     # 2. Recopilar datos del sistema
                     cota = float(args.get('cota', 28.1))
@@ -283,7 +287,7 @@ def aplicativo_detail(slug):
                     flash(f'Error en los datos de entrada: {e}. Por favor, verifique los valores.', 'danger')
 
             # Usamos los 'args' modificados para repintar el formulario
-            return render_template(aplicativo.template_file, aplicativo=aplicativo, graph_html=graph_html, request=args)
+            return render_template(aplicativo.template_file, aplicativo=aplicativo, graph_html=graph_html, request=args, tipos=tipos_menu)
         
         elif aplicativo.template_file == 'webapps/calculadora_perdidas.html':
             resultados = None
@@ -315,7 +319,7 @@ def aplicativo_detail(slug):
                 except (ValueError, TypeError, ZeroDivisionError):
                     flash('Por favor, ingrese valores numéricos válidos y mayores que cero.', 'danger')
             
-            return render_template(aplicativo.template_file, aplicativo=aplicativo, resultados=resultados, graph_html=graph_html)
+            return render_template(aplicativo.template_file, aplicativo=aplicativo, resultados=resultados, graph_html=graph_html, tipos=tipos_menu)
 
         elif aplicativo.template_file == 'webapps/calculadora_perdida_accesorios.html':
             resultados = None
@@ -366,7 +370,7 @@ def aplicativo_detail(slug):
             if resultados:
                 graph_html = _crear_grafico_perdidas_accesorios(resultados['hf_tuberia'], resultados['hf_accesorios'], incluir_js=True)
 
-            return render_template(aplicativo.template_file, aplicativo=aplicativo, accesorios=ACCESORIOS, resultados=resultados, graph_html=graph_html)
+            return render_template(aplicativo.template_file, aplicativo=aplicativo, accesorios=ACCESORIOS, resultados=resultados, graph_html=graph_html, tipos=tipos_menu)
 
         elif aplicativo.template_file == 'webapps/conversor_unidades.html':
             magnitud_activa = request.args.get('magnitud', 'caudal')
@@ -390,7 +394,8 @@ def aplicativo_detail(slug):
                                  magnitud_activa=magnitud_activa,
                                  valor_entrada=valor_entrada,
                                  unidad_origen=unidad_origen,
-                                 resultados=resultados)
+                                 resultados=resultados,
+                                 tipos=tipos_menu)
 
         elif aplicativo.template_file == 'webapps/seleccion_cable_sumergible.html':
             resultados = None
@@ -439,7 +444,7 @@ def aplicativo_detail(slug):
                 except (ValueError, TypeError, ZeroDivisionError) as e:
                     flash(f'Error en los datos de entrada: {e}. Por favor, verifique los valores.', 'danger')
 
-            return render_template(aplicativo.template_file, aplicativo=aplicativo, resultados=resultados)
+            return render_template(aplicativo.template_file, aplicativo=aplicativo, resultados=resultados, tipos=tipos_menu)
 
         elif aplicativo.template_file == 'webapps/calculadora_sumergencia.html':
             resultados = None
@@ -484,12 +489,12 @@ def aplicativo_detail(slug):
                 except (ValueError, TypeError, ZeroDivisionError) as e:
                     flash(f'Error en los datos de entrada: {e}. Por favor, verifique los valores.', 'danger')
             
-            return render_template(aplicativo.template_file, aplicativo=aplicativo, resultados=resultados)
+            return render_template(aplicativo.template_file, aplicativo=aplicativo, resultados=resultados, tipos=tipos_menu)
 
-        return render_template(aplicativo.template_file, aplicativo=aplicativo)
+        return render_template(aplicativo.template_file, aplicativo=aplicativo, tipos=tipos_menu)
     
     # Si no, mostramos la página de detalle genérica (comportamiento anterior).
-    return render_template('webapps/aplicativo.html', aplicativo=aplicativo)
+    return render_template('webapps/aplicativo.html', aplicativo=aplicativo, tipos=tipos_menu)
 
 
 # --- NUEVAS RUTAS PARA LA CALCULADORA INTERACTIVA CON PLOTLY Y HTMX ---

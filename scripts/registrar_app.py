@@ -14,8 +14,8 @@ app = create_app('config.DevelopmentConfig')
 
 def registrar_calculadora():
     with app.app_context():
-        nombre_antiguo = "Calculadora de Curva Interactiva"
-        nombre_nuevo = "Análisis de Curva de Bomba y Sistema"
+        nombre_antiguo = "Análisis de Curva de Bomba y Sistema"
+        nombre_nuevo = "Cálculo de la curva de sistema"
         
         # Buscamos el aplicativo por su nombre ANTIGUO
         app_existente = Aplicativo.query.filter(Aplicativo.nombre == nombre_antiguo).first()
@@ -51,7 +51,7 @@ def registrar_calculadora():
 
 def registrar_calculadora_perdidas():
     with app.app_context():
-        nombre_app = "Calculadora de Pérdidas por Fricción"
+        nombre_app = "Caída de Presión en la Tubería (Hazen Williams)"
         
         app_existente = Aplicativo.query.filter(Aplicativo.nombre == nombre_app).first()
         
@@ -115,7 +115,7 @@ def registrar_conversor_unidades():
 
 def registrar_calculadora_perdida_accesorios():
     with app.app_context():
-        nombre_app = "Cálculo de Pérdidas por Accesorios"
+        nombre_app = "Pérdidas de Carga en Tuberías y Accesorios"
         app_existente = Aplicativo.query.filter(Aplicativo.nombre == nombre_app).first()
 
         nombre_tipo = "Cálculos Hidráulicos"
@@ -165,7 +165,7 @@ def limpiar_duplicados():
 
 def registrar_seleccion_cable():
     with app.app_context():
-        nombre_app = "Selección de Cable Sumergible"
+        nombre_app = "Dimensionamiento del cable"
         app_existente = Aplicativo.query.filter(Aplicativo.nombre == nombre_app).first()
 
         nombre_tipo = "Cálculos Eléctricos"
@@ -196,7 +196,7 @@ def registrar_seleccion_cable():
 
 def registrar_calculadora_sumergencia():
     with app.app_context():
-        nombre_app = "Calculadora de Sumergencia Mínima"
+        nombre_app = "Sumergencia mínima de tubería succión"
         app_existente = Aplicativo.query.filter(Aplicativo.nombre == nombre_app).first()
 
         nombre_tipo = "Cálculos Hidráulicos"
@@ -225,8 +225,91 @@ def registrar_calculadora_sumergencia():
             db.session.commit()
             print(f"¡Aplicativo '{nombre_app}' creado exitosamente!")
 
+# Usamos una lista de tuplas para mantener el orden del Excel
+ESTRUCTURA_APLICATIVOS = [
+    ("General", [
+        "Conversor de Unidades",
+    ]),
+    ("Tuberías", [
+        "Caída de Presión en la Tubería (Hazen Williams)",
+        "Pérdidas de Carga en Tuberías y Accesorios",
+    ]),
+    ("Bomba centrífuga", [
+        "Sumergencia mínima de tubería succión",
+    ]),
+    ("Diseño e Ingeniería - Hidráulica general", [
+        "Cálculo de la curva de sistema",
+    ]),
+    ("Operación", []),
+    ("Dimensionamiento Eléctrico", [
+        "Dimensionamiento del cable",
+    ]),
+    ("Electricidad Industrial", []),
+    ("Tanque Hidroneumático", []),
+    ("Simuladores para control de bombas", []),
+    ("Para Mantenimiento de Bombas", []),
+    ("Bomba Turbina Sumergible para pozo profundo", []),
+    ("Costos de energía y eficiencia energética", []),
+    ("Costos y presupuestos y tiempos de entrega", []),
+    ("Matemáticas y estadística", []),
+]
+
+def sincronizar_estructura():
+    """
+    Crea las categorías (Tipos) y reasigna los aplicativos existentes
+    según la estructura definida en ESTRUCTURA_APLICATIVOS.
+    """
+    with app.app_context():
+        print("Iniciando sincronización de estructura de aplicativos...")
+        
+        # 1. Crear/Obtener todas las categorías necesarias
+        tipos_db = {}
+        for i, (nombre_tipo, _) in enumerate(ESTRUCTURA_APLICATIVOS):
+            orden = i + 1
+            tipo = TipoAplicativo.query.filter_by(nombre=nombre_tipo).first()
+            if not tipo:
+                print(f"Creando nueva categoría: '{nombre_tipo}'")
+                tipo = TipoAplicativo(nombre=nombre_tipo, descripcion=f"Herramientas de {nombre_tipo.lower()}.", orden=orden)
+                db.session.add(tipo)
+                db.session.flush() # Para obtener el ID antes del commit
+            elif tipo.orden != orden:
+                print(f"Actualizando orden para '{nombre_tipo}' a {orden}")
+                tipo.orden = orden
+            tipos_db[nombre_tipo] = tipo
+
+        # 2. Reasignar aplicativos existentes a su nueva categoría
+        for nombre_tipo, lista_apps in ESTRUCTURA_APLICATIVOS:
+            tipo_obj = tipos_db[nombre_tipo]
+            for nombre_app in lista_apps:
+                app_obj = Aplicativo.query.filter_by(nombre=nombre_app).first()
+                if app_obj and app_obj.tipo_aplicativo_id != tipo_obj.id:
+                    print(f"Reasignando '{nombre_app}' a la categoría '{nombre_tipo}'...")
+                    app_obj.tipo_aplicativo_id = tipo_obj.id
+        
+        db.session.commit()
+        print("Sincronización de estructura completada.")
+
+def limpiar_categorias_vacias():
+    """
+    Busca y elimina las categorías (TipoAplicativo) que no tienen
+    ningún aplicativo asociado.
+    """
+    with app.app_context():
+        print("Buscando categorías vacías para limpiar...")
+        
+        # Query para encontrar tipos que no tienen aplicativos
+        categorias_vacias = TipoAplicativo.query.outerjoin(Aplicativo).group_by(TipoAplicativo.id).having(db.func.count(Aplicativo.id) == 0).all()
+
+        if categorias_vacias:
+            for categoria in categorias_vacias:
+                print(f"Eliminando categoría vacía: '{categoria.nombre}'")
+                db.session.delete(categoria)
+            db.session.commit()
+            print("Limpieza de categorías vacías completada.")
+        else:
+            print("No se encontraron categorías vacías.")
+
+
 if __name__ == '__main__':
-    # registrar_calculadora()
-    # limpiar_duplicados()
-    # registrar_seleccion_cable()
-    registrar_calculadora_sumergencia()
+    sincronizar_estructura()
+    limpiar_categorias_vacias()
