@@ -29,7 +29,7 @@
                             {# Solución: Iteramos para sumar el resultado de llamar al método .count() en cada relación 'grupos' #}
                             {% set total_grupos = namespace(value=0) %}
                             {% for curso in pagination.items %}
-                                {% set total_grupos.value = total_grupos.value + curso.grupos.count() %}
+                                {% set total_grupos.value = total_grupos.value + (curso.grupos | length) %}
                             {% endfor %}
                             <h5>{{ total_grupos.value }}</h5>
                             <p class="mb-0">Total Grupos (todos los estados)</p>
@@ -67,7 +67,7 @@
                                             <span class="badge bg-secondary">{{ curso.duracion or 'N/A' }} hrs</span>
                                         </td>
                                         <td>
-                                            <span class="badge rounded-pill bg-primary">{{ curso.grupos.count() }}</span>
+                                            <span class="badge rounded-pill bg-primary">{{ curso.grupos | length }}</span>
                                         </td>
                                         <td>
                                             <div class="btn-group btn-group-sm">

@@ -49,19 +49,63 @@ class Curso(db.Model):
     descripcion = db.Column("descripcioncurso", db.Text, nullable=False)
     footer = db.Column("footercurso", db.Text)
     temario = db.Column("temariocurso", db.Text, nullable=False)
+    modulos = db.relationship('Modulo', back_populates='curso', cascade="all, delete-orphan")
     foto = db.Column('fotocurso', db.String(1000))
     banner = db.Column('bannerCurso', db.String(100))
     banner2 = db.Column('banner2Curso', db.String(100))
     thumbnail = db.Column('thumbnailCurso', db.String(100))
 
     # Relación uno-a-muchos: Un curso puede tener muchos grupos
-    grupos = db.relationship('Grupo', back_populates='curso', lazy='dynamic')
+    grupos = db.relationship('Grupo', back_populates='curso')
     
     # Relación muchos-a-muchos con Especializacion
     especializaciones = db.relationship('Especializacion', secondary=especializacion_curso, back_populates='cursos')
 
     def __repr__(self):
         return f'<Curso {self.nombre}>'
+
+
+class Modulo(db.Model):
+    __tablename__ = 'modulos'
+    id = db.Column(db.Integer, primary_key=True)
+    curso_id = db.Column(db.Integer, db.ForeignKey('curso.idcurso'), nullable=False)
+    titulo = db.Column(db.String(255), nullable=False)
+    orden = db.Column(db.Integer, nullable=False, default=0)
+
+    curso = db.relationship('Curso', back_populates='modulos')
+    items = db.relationship('ItemTemario', back_populates='modulo', cascade="all, delete-orphan")
+
+    def __repr__(self):
+        return f'<Modulo {self.orden}: {self.titulo}>'
+
+
+class ItemTemario(db.Model):
+    __tablename__ = 'items_temario'
+    id = db.Column(db.Integer, primary_key=True)
+    modulo_id = db.Column(db.Integer, db.ForeignKey('modulos.id'), nullable=False)
+    contenido = db.Column(db.Text, nullable=False)
+    orden = db.Column(db.Integer, nullable=False, default=0)
+
+    modulo = db.relationship('Modulo', back_populates='items')
+
+class Horario(db.Model):
+    __tablename__ = 'horarios'
+    id = db.Column(db.Integer, primary_key=True)
+    grupo_id = db.Column(db.Integer, db.ForeignKey('grupo.idgrupo'), nullable=False)
+    horainicio = db.Column(db.String(50), nullable=False)
+    horafin = db.Column(db.String(50), nullable=False)
+
+    grupo = db.relationship('Grupo', back_populates='horarios')
+    paises = db.relationship('PaisHorario', back_populates='horario', cascade="all, delete-orphan")
+
+
+class PaisHorario(db.Model):
+    __tablename__ = 'paises_horario'
+    id = db.Column(db.Integer, primary_key=True)
+    horario_id = db.Column(db.Integer, db.ForeignKey('horarios.id'), nullable=False)
+    nombre = db.Column(db.String(100), nullable=False)
+
+    horario = db.relationship('Horario', back_populates='paises')
 
 class Grupo(db.Model):
     __tablename__ = 'grupo'
@@ -96,6 +140,7 @@ class Grupo(db.Model):
     # Relaciones
     curso = db.relationship('Curso', back_populates='grupos')
     docente = db.relationship('Docente', back_populates='grupos')
+    horarios = db.relationship('Horario', back_populates='grupo', cascade="all, delete-orphan")
     sesiones = db.relationship(
         'Sesion', back_populates='grupo', cascade="all, delete-orphan", lazy='dynamic'
     )

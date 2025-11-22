@@ -1,39 +1,106 @@
 {% extends 'admin/_layout.html' %}
 
 {% block admin_content %}
-<div class="container py-4">
-  <h1 class="h4 mb-4">{{ title }}</h1>
-  <form method="POST" novalidate>
-    {{ form.hidden_tag() }}
-    <div class="row g-3">
-      {{ render_field(form.id_curso, class_='col-md-6', **{'class': 'form-select'}) }}
-      {{ render_field(form.id_docente, class_='col-md-6', **{'class': 'form-select'}) }}
-      {{ render_field(form.estado, class_='col-md-4', **{'class': 'form-select'}) }}
-      {{ render_field(form.fecha_inicio, class_='col-md-4') }}
-      {{ render_field(form.fecha_fin, class_='col-md-4') }}
-      {{ render_field(form.capacidad_minima, class_='col-md-3') }}
-      {{ render_field(form.capacidad_maxima, class_='col-md-3') }}
-      {{ render_field(form.visible, class_='col-md-6 d-flex align-items-center gap-2') }}
-      
-      <hr class="my-3">
-      <h6 class="col-12">Precios</h6>
-      {{ render_field(form.precio_usuario, class_='col-md-3') }}
-      {{ render_field(form.precio_usuario_preinscripcion, class_='col-md-3') }}
-      {{ render_field(form.precio_miembro, class_='col-md-3') }}
-      {{ render_field(form.precio_miembro_preinscripcion, class_='col-md-3') }}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="w-100">{{ title }}</h2>
+            </div>
 
-      <hr class="my-3">
-      {{ render_field(form.horario_descripcion, class_='col-12', rows=3) }}
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+                        <div class="row g-3">
+                            {{ render_field(form.id_curso, class_='col-md-6', **{'class': 'form-select'}) }}
+                            {{ render_field(form.id_docente, class_='col-md-6', **{'class': 'form-select'}) }}
+                            {{ render_field(form.estado, class_='col-md-4', **{'class': 'form-select'}) }}
+                            {{ render_field(form.fecha_inicio, class_='col-md-4') }}
+                            {{ render_field(form.fecha_fin, class_='col-md-4') }}
+                            {{ render_field(form.capacidad_minima, class_='col-md-3') }}
+                            {{ render_field(form.capacidad_maxima, class_='col-md-3') }}
+                            {{ render_field(form.visible, class_='col-md-6 d-flex align-items-center gap-2') }}
+                            
+                            <hr class="my-3">
+                            <h6 class="col-12">Precios</h6>
+                            {# --- SOLUCIÓN DEFINITIVA PARA LA COMA DECIMAL --- #}
+                            {# Renderizamos manualmente estos 4 campos para evitar problemas con la macro #}
+                            <div class="col-md-3 mb-3">
+                                {{ form.precio_usuario.label(class="form-label") }}
+                                {{ form.precio_usuario(class="form-control", step="0.01") }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ form.precio_usuario_preinscripcion.label(class="form-label") }}
+                                {{ form.precio_usuario_preinscripcion(class="form-control", step="0.01") }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ form.precio_miembro.label(class="form-label") }}
+                                {{ form.precio_miembro(class="form-control", step="0.01") }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                {{ form.precio_miembro_preinscripcion.label(class="form-label") }}
+                                {{ form.precio_miembro_preinscripcion(class="form-control", step="0.01") }}
+                            </div>
+
+                            <hr class="my-3">
+                            {{ render_field(form.horario_descripcion, class_='col-12', rows=2, help_text="Ej: Lunes y Miércoles") }}
+                        </div>
+
+                        <hr class="my-4">
+
+                        {# --- GESTIÓN DINÁMICA DE HORARIOS --- #}
+                        <div id="horarios-container">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4>Bloques de Horario por Zona</h4>
+                                <button type="submit" name="action" value="add_horario" class="btn btn-success btn-sm">
+                                    <i class="fas fa-plus"></i> Añadir Bloque
+                                </button>
+                            </div>
+
+                            <div id="horarios-list">
+                                {% for horario_form in form.horarios.entries %}
+                                    {% set horario_index = loop.index0 %} {# Guardamos el índice del bucle padre #}
+                                    <div class="horario-form card mb-3">
+                                        <div class="card-header bg-light d-flex justify-content-between align-items-center p-2">
+                                            <strong class="ms-2">Bloque de Horario</strong>
+                                            <button type="submit" name="action" value="remove_horario_{{ loop.index0 }}" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row">
+                                                <div class="col-md-6">{{ render_field(horario_form.horainicio) }}</div>
+                                                <div class="col-md-6">{{ render_field(horario_form.horafin) }}</div>
+                                            </div>
+                                            <div class="paises-list mt-3">
+                                                <h6 class="text-muted">Países en esta zona horaria</h6>
+                                                {% for pais_form in horario_form.paises.entries %}
+                                                    <div class="pais-form d-flex align-items-center mb-2">
+                                                        {{ render_field(pais_form.nombre, hide_label=True, **{'class': 'form-select form-select-sm'}) }}
+                                                        <button type="submit" name="action" value="remove_pais_{{ horario_index }}_{{ loop.index0 }}" class="btn btn-outline-danger btn-sm ms-2"><i class="fas fa-times"></i></button>
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+                                            <button type="submit" name="action" value="add_pais_{{ horario_index }}" class="btn btn-outline-primary btn-sm add-pais mt-2"><i class="fas fa-plus"></i> Añadir País</button>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {# --- FIN GESTIÓN DINÁMICA --- #}
+                        
+                        <div class="mt-4 d-flex gap-2">
+                            {{ form.submit(class="btn btn-primary") }}
+                            <a href="{{ url_for('admin.grupos') }}" class="btn btn-secondary">Cancelar</a>
+                            {% if grupo %}
+                            <form method="post" action="{{ url_for('admin.eliminar_grupo', grupo_id=grupo.id) }}" onsubmit="return confirm('¿Eliminar grupo?');" class="d-inline">
+                                <button type="submit" class="btn btn-outline-danger">Eliminar</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="mt-4 d-flex gap-2">
-      {{ form.submit(class="btn btn-primary") }}
-      <a href="{{ url_for('admin.grupos') }}" class="btn btn-secondary">Cancelar</a>
-      {% if grupo %}
-      <form method="post" action="{{ url_for('admin.eliminar_grupo', grupo_id=grupo.id) }}" onsubmit="return confirm('¿Eliminar grupo?');" class="d-inline">
-        <button type="submit" class="btn btn-outline-danger">Eliminar</button>
-      </form>
-      {% endif %}
-    </div>
-  </form>
 </div>
 {% endblock %}

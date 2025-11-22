@@ -4,6 +4,13 @@ from flask_login import login_required, current_user
 from app.cursos import bp
 from werkzeug.exceptions import NotFound
 from .models import Curso, Especializacion, Grupo, Sesion, db
+
+# --- FILTRO JINJA2 PERSONALIZADO PARA NÚMEROS ---
+@bp.app_template_filter('format_number')
+def format_number(value):
+    """Formatea un número a 2 decimales, con coma para miles y punto para decimales."""
+    return f"{value:,.2f}"
+
 from .forms import MatriculaForm # Importamos el nuevo formulario
 from app.matriculas.models import AlumnoGrupo # Importar desde el módulo correcto
 
@@ -30,23 +37,24 @@ def lista_cursos():
 @bp.route('/curso/<slug>')
 def detalle_curso(slug):
     """Muestra la página de detalle de un curso específico."""
-    # Obtener la pestaña activa de la URL, por defecto 'overview'
-    active_tab = request.args.get('tab', 'overview')
     # Usamos .first_or_404() para simplificar el manejo de errores si el curso no existe.
     curso = Curso.query.filter_by(slug=slug).first_or_404()
-
+    active_tab = request.args.get('tab', 'overview')
     form = MatriculaForm() # Creamos una instancia del formulario
-    # Buscamos el primer grupo ACTIVO y CONFIRMADO para mostrar en la página.
-    grupo_activo = curso.grupos.filter(
-        Grupo.visible == True,
-        Grupo.estado == 'CONFIRMADO'
-    ).order_by(Grupo.fecha_inicio.asc()).first()
+
+    # ¡CORRECCIÓN! Obtenemos TODOS los grupos visibles para este curso.
+    # Como curso.grupos ahora es una lista, la filtramos con una list comprehension.
+    grupos_visibles = [g for g in curso.grupos if g.visible]
+
+    # Obtenemos el primer grupo para pasarlo a la plantilla (para el instructor, etc.)
+    primer_grupo = grupos_visibles[0] if grupos_visibles else None
 
     return render_template('cursos/detalle_curso.html', 
                            title=curso.nombre, 
                            curso=curso, 
                            form=form, # Pasamos el formulario a la plantilla
-                           grupo=grupo_activo,
+                           grupos=grupos_visibles, # Pasamos la LISTA de grupos
+                           primer_grupo=primer_grupo, # Pasamos el primer grupo
                            active_tab=active_tab)
     
 @bp.route('/curso/<slug>/matricular', methods=['POST'])

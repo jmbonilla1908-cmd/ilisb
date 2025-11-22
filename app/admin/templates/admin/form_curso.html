@@ -39,20 +39,156 @@
                         
                         {{ render_field(form.texto_corto, class="form-control", rows=3) }}
                         {{ render_field(form.descripcion, class="form-control", rows=8) }}
-                        {{ render_field(form.temario, class="form-control", rows=10) }}
-                        <div class="form-text mb-3">
-                            El temario debe estar en formato JSON. Puedes usar un validador online para asegurarte de que es correcto.
-                        </div>
                         {{ render_field(form.footer, class="form-control", rows=5) }}
+
+                        <hr class="my-4">
+
+                        {# --- GESTIÓN DINÁMICA DEL TEMARIO --- #}
+                        <div id="temario-container">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4>Gestión del Temario</h4>
+                                <button type="button" id="add-module" class="btn btn-success btn-sm">
+                                    <i class="fas fa-plus"></i> Añadir Módulo
+                                </button>
+                            </div>
+
+                            <div id="modulos-list" class="accordion">
+                                {% for modulo_form in form.modulos %}
+                                    {% set module_index = loop.index0 %}
+                                    <div class="accordion-item module-form mb-3 border">
+                                        <div class="accordion-header p-2 bg-light">
+                                            <div class="d-flex align-items-center">
+                                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ module_index }}">
+                                                    Módulo #{{ loop.index }}
+                                                </button>
+                                                <button type="button" class="btn btn-danger btn-sm remove-module ms-2">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div id="collapse-{{ module_index }}" class="accordion-collapse collapse">
+                                            <div class="accordion-body">
+                                                {{ render_field(modulo_form.titulo, class="form-control form-control-lg mb-3") }}
+                                                
+                                                <div class="items-list ms-3">
+                                                    <h6 class="text-muted">Ítems del Módulo</h6>
+                                                    {% for item_form in modulo_form.items %}
+                                                        <div class="item-form d-flex align-items-center mb-2">
+                                                            {{ render_field(item_form.contenido, class="form-control form-control-sm", hide_label=True) }}
+                                                            <button type="button" class="btn btn-outline-danger btn-sm remove-item ms-2">
+                                                                <i class="fas fa-times"></i>
+                                                            </button>
+                                                        </div>
+                                                    {% endfor %}
+                                                </div>
+                                                <button type="button" class="btn btn-outline-primary btn-sm add-item mt-2 ms-3">
+                                                    <i class="fas fa-plus"></i> Añadir Ítem
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {# --- FIN GESTIÓN DINÁMICA --- #}
 
                         <div class="d-flex justify-content-end mt-4">
                             <a href="{{ url_for('admin.cursos') }}" class="btn btn-secondary me-2">Cancelar</a>
                             {{ form.submit(class="btn btn-primary") }}
                         </div>
                     </form>
+
+                    {# Prototipos ocultos para clonar con JS #}
+                    <div id="prototypes" style="display: none;">
+                        {# Prototipo de Módulo #}
+                        <div class="accordion-item module-form mb-3 border">
+                            <div class="accordion-header p-2 bg-light">
+                                <div class="d-flex align-items-center">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse">Módulo</button>
+                                    <button type="button" class="btn btn-danger btn-sm remove-module ms-2"><i class="fas fa-trash"></i></button>
+                                </div>
+                            </div>
+                            <div class="accordion-collapse collapse">
+                                <div class="accordion-body">
+                                    {{ render_field(form.modulos[0].titulo, class="form-control form-control-lg mb-3") }}
+                                    <div class="items-list ms-3">
+                                        <h6 class="text-muted">Ítems del Módulo</h6>
+                                        <div class="item-form d-flex align-items-center mb-2">
+                                            {{ render_field(form.modulos[0].items[0].contenido, class="form-control form-control-sm", hide_label=True) }}
+                                            <button type="button" class="btn btn-outline-danger btn-sm remove-item ms-2"><i class="fas fa-times"></i></button>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-outline-primary btn-sm add-item mt-2 ms-3"><i class="fas fa-plus"></i> Añadir Ítem</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {# Prototipo de Ítem #}
+                        <div class="item-form d-flex align-items-center mb-2">
+                            {{ render_field(form.modulos[0].items[0].contenido, class="form-control form-control-sm", hide_label=True) }}
+                            <button type="button" class="btn btn-outline-danger btn-sm remove-item ms-2"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modulosList = document.getElementById('modulos-list');
+    const modulePrototype = document.querySelector('#prototypes .module-form');
+    const itemPrototype = document.querySelector('#prototypes .item-form');
+
+    function updateNamesAndIds() {
+        document.querySelectorAll('.module-form').forEach((module, moduleIndex) => {
+            module.querySelector('.accordion-button').dataset.bsTarget = `#collapse-${moduleIndex}`;
+            module.querySelector('.accordion-collapse').id = `collapse-${moduleIndex}`;
+            module.querySelector('.accordion-button').innerHTML = `Módulo #${moduleIndex + 1}`;
+
+            module.querySelectorAll('[name]').forEach(input => {
+                input.name = input.name.replace(/modulos-\d+/, `modulos-${moduleIndex}`);
+                input.id = input.id.replace(/modulos-\d+/, `modulos-${moduleIndex}`);
+            });
+
+            module.querySelectorAll('.item-form').forEach((item, itemIndex) => {
+                item.querySelectorAll('[name]').forEach(input => {
+                    input.name = input.name.replace(/items-\d+/, `items-${itemIndex}`);
+                    input.id = input.id.replace(/items-\d+/, `items-${itemIndex}`);
+                });
+            });
+        });
+    }
+
+    document.getElementById('add-module').addEventListener('click', () => {
+        const newModule = modulePrototype.cloneNode(true);
+        modulosList.appendChild(newModule);
+        updateNamesAndIds();
+    });
+
+    modulosList.addEventListener('click', (e) => {
+        if (e.target.closest('.remove-module')) {
+            e.target.closest('.module-form').remove();
+            updateNamesAndIds();
+        }
+        if (e.target.closest('.add-item')) {
+            const itemsList = e.target.closest('.accordion-body').querySelector('.items-list');
+            const newItem = itemPrototype.cloneNode(true);
+            itemsList.appendChild(newItem);
+            updateNamesAndIds();
+        }
+        if (e.target.closest('.remove-item')) {
+            e.target.closest('.item-form').remove();
+            updateNamesAndIds();
+        }
+    });
+
+    // Inicializar los nombres al cargar la página
+    updateNamesAndIds();
+});
+</script>
 {% endblock %}

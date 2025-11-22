@@ -1,7 +1,14 @@
-<div data-tab="overview">
-    <p>{{ curso.descripcion | safe }}</p>
-    <div id="footercurso">
-        <p><b>Al finalizar este curso, usted será capaz de:</b></p>
-        <p>{{ curso.footer | safe }}</p>
+<div class="tab-pane fade show active" id="overview" role="tabpanel">
+    <h4 class="mb-3">Descripción del Curso</h4>
+    <div class="course-description mb-4">
+        {{ curso.descripcion | safe }}
     </div>
+
+    {% if curso.footer %}
+    <div class="alert alert-primary" role="alert">
+        <h5 class="alert-heading"><i class="fas fa-check-circle me-2"></i>Al finalizar este curso, usted será capaz de:</h5>
+        <hr>
+        {{ curso.footer | safe }}
+    </div>
+    {% endif %}
 </div>

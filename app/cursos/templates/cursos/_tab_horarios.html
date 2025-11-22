@@ -1,16 +1,38 @@
-<div data-tab="horarios">
-    {% if grupo %}
-        <div>
-            <h4>Fechas</h4>
-            <p><strong>Inicio:</strong> {{ grupo.fecha_inicio.strftime('%d de %B de %Y') if grupo.fecha_inicio else 'Por definir' }}</p>
-            <p><strong>Fin:</strong> {{ grupo.fecha_fin.strftime('%d de %B de %Y') if grupo.fecha_fin else 'Por definir' }}</p>
-        </div>
-        <div class="mt-4">
-            <h4>Horario</h4>
-            {# Usamos el filtro 'safe' si el contenido puede tener HTML, como <br> #}
-            <p>{{ grupo.horario_descripcion | safe if grupo.horario_descripcion else 'El horario detallado será publicado próximamente.' }}</p>
-        </div>
+<div class="tab-pane fade show active" id="horarios" role="tabpanel">
+    <h4 class="mb-4">Horarios Disponibles</h4>
+
+    {% if grupos %}
+        {% for grupo in grupos %}
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Grupo #{{ grupo.id }} - Inicia: {{ grupo.fecha_inicio.strftime('%d de %B, %Y') }}</h5>
+                </div>
+                <div class="card-body">
+                    {# ¡NUEVA LÓGICA! Iteramos sobre la relación grupo.horarios #}
+                    {% if grupo.horarios %}
+                        <div class="row">
+                            {% for horario in grupo.horarios %}
+                                <div class="col-md-4 mb-3">
+                                    <div class="border rounded p-3 h-100 text-center shadow-sm">
+                                        <p class="lead mb-1"><i class="far fa-clock me-2"></i><strong>{{ horario.horainicio }} - {{ horario.horafin }}</strong></p>
+                                        <ul class="list-unstyled text-muted mb-0">
+                                            {# Iteramos sobre la sub-relación horario.paises #}
+                                            {% for pais in horario.paises | sort(attribute='nombre') %}
+                                                <li><small>{{ pais.nombre }}</small></li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <p class="mt-3 text-muted"><i class="far fa-calendar-alt me-2"></i>{{ grupo.horario_descripcion or "Horario general por definir." }}</p>
+                </div>
+            </div>
+        {% endfor %}
     {% else %}
-        <p>No hay grupos programados para este curso en este momento.</p>
+        <div class="alert alert-light">
+            <p class="mb-0"><i class="fas fa-info-circle me-2"></i>Actualmente no hay grupos programados para este curso. ¡Vuelve a consultar pronto!</p>
+        </div>
     {% endif %}
 </div>

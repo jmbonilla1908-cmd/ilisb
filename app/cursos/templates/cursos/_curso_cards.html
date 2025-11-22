@@ -1,7 +1,7 @@
 {# Este fragmento se usa para HTMX y para la carga inicial de la lista de cursos #}
 <div class="row row-cols-1 row-cols-md-2 g-4">
     {% for curso in cursos %}
-        {% if curso.grupos.first() %}
+        {% if curso.grupos %}
             <div class="col">
                 <div class="card h-100 shadow-sm course-card">
                     <a href="{{ url_for('cursos.detalle_curso', slug=curso.slug) }}" class="text-decoration-none text-dark">
@@ -24,7 +24,7 @@
                             <h6 class="card-title fw-bold">{{ curso.nombre }}</h6>
                             <div class="mt-auto">
                                 {# Obtenemos la primera sesión del primer grupo para mostrar la fecha de inicio #}
-                                {% set primera_sesion = curso.grupos.first().sesiones | sort(attribute='fecha') | first %}
+                                {% set primera_sesion = curso.grupos[0].sesiones | sort(attribute='fecha') | first %}
                                 {% if primera_sesion and primera_sesion.fecha %}
                                 <p class="card-text mb-0"><small class="text-muted">Inicia: {{ primera_sesion.fecha.strftime('%d/%m/%Y') }}</small></p>
                                 {% endif %}

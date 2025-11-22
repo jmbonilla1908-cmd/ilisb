@@ -1,13 +1,26 @@
-{% macro render_field(field, class="") %}
-<div class="mb-3 {{ kwargs.pop('class_', '') }}">
-    {{ field.label(class="form-label") }}
-    {% if field.type == 'BooleanField' %}
-        {{ field(class="form-check-input " + class, **kwargs) }}
-    {% else %}
-        {{ field(class="form-control " + class + (' is-invalid' if field.errors else ''), **kwargs) }}
-    {% endif %}
-    {% for error in field.errors %}
-        <div class="invalid-feedback">{{ error }}</div>
-    {% endfor %}
-</div>
+{# Macro para renderizar un campo de formulario con Bootstrap 5 #}
+{% macro render_field(field, class_='', help_text='', hide_label=False) %}
+    <div class="{{ class_ or 'mb-3' }}">
+        {# No mostrar label para campos ocultos, booleanos o si se pide explícitamente #}
+        {% if field.type not in ['BooleanField', 'HiddenField'] and not hide_label %}
+            {{ field.label(class="form-label") }}
+        {% endif %}
+
+        {# Jinja2 agrupa los argumentos extra en la variable especial 'kwargs' #}
+        {% if field.type == 'BooleanField' %}
+            <div class="form-check">
+                {{ field(class="form-check-input " + kwargs.pop('class', ''), **kwargs) }}
+                {{ field.label(class="form-check-label") }}
+            </div>
+        {% else %}
+            {% set default_class = 'form-control' if field.type != 'SelectField' else 'form-select' %}
+            {% set final_class = kwargs.pop('class', default_class) + (' is-invalid' if field.errors else '') %}
+            {{ field(class=final_class, **kwargs) }}
+        {% endif %}
+
+        {% for error in field.errors %}
+            <div class="invalid-feedback">{{ error }}</div>
+        {% endfor %}
+        {% if help_text %}<div class="form-text">{{ help_text }}</div>{% endif %}
+    </div>
 {% endmacro %}

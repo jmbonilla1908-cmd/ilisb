@@ -5,9 +5,9 @@ from werkzeug.utils import secure_filename
 from app import db
 from app.admin import bp
 from app.admin.decorators import admin_required, superuser_required # type: ignore
-from app.admin.forms import AdminLoginForm, DocenteForm, AlumnoForm, GrupoForm, CursoForm, AdminUserForm
+from app.admin.forms import AdminLoginForm, DocenteForm, AlumnoForm, GrupoForm, CursoForm, AdminUserForm, ModuloForm, ItemTemarioForm, HorarioForm, PaisHorarioForm
 from app.admin.models import User
-from app.cursos.models import Curso, Docente, Grupo
+from app.cursos.models import Curso, Docente, Grupo, Modulo, ItemTemario, Horario, PaisHorario
 from app.auth.models import Alumno
 import secrets
 import os
@@ -149,12 +149,25 @@ def nuevo_curso():
             upload_path = os.path.join(os.getcwd(), 'app', 'static', 'img', 'cursos', banner_filename)
             f.save(upload_path)
 
-        curso = Curso()
-        form.populate_obj(curso)
+        # Creamos el curso con los campos principales
+        curso = Curso(
+            nombre=form.nombre.data,
+            duracion=form.duracion.data,
+            texto_corto=form.texto_corto.data,
+            descripcion=form.descripcion.data,
+            footer=form.footer.data
+        )
         # Generar slug a partir del nombre
         curso.slug = slugify(curso.nombre)
         if banner_filename:
             curso.banner = banner_filename
+        
+        # Añadimos los módulos y sus ítems
+        for i, modulo_form in enumerate(form.modulos):
+            modulo = Modulo(titulo=modulo_form.titulo.data, orden=i, curso=curso)
+            for j, item_form in enumerate(modulo_form.items):
+                ItemTemario(contenido=item_form.contenido.data, orden=j, modulo=modulo)
+
         try:
             db.session.add(curso)
             db.session.commit()
@@ -188,9 +201,19 @@ def admin_detalle_curso(slug):
 @admin_required
 def editar_curso(slug):
     """Editar un curso específico"""
-    curso = Curso.query.filter_by(slug=slug).first_or_404()
-    form = CursoForm(obj=curso)
-    
+    curso = Curso.query.options(
+        db.joinedload(Curso.modulos).joinedload(Modulo.items)
+    ).filter_by(slug=slug).first_or_404()
+
+    # Si el formulario no se está enviando, lo pre-poblamos con los datos de la BD
+    if not request.form:
+        form = CursoForm(obj=curso)
+        # Si el curso no tiene módulos, añadimos uno vacío para que la plantilla lo renderice.
+        if not form.modulos.entries:
+            form.modulos.append_entry()
+    else:
+        form = CursoForm()
+
     if form.validate_on_submit():
         # Rellena el objeto 'curso' con los datos validados del formulario
         # Procesamiento de la imagen del banner si se sube una nueva
@@ -206,10 +229,27 @@ def editar_curso(slug):
             # Aquí podrías añadir lógica para borrar la imagen antigua si lo deseas
             curso.banner = banner_filename
 
-        form.populate_obj(curso)
+        # Actualizamos los campos principales
+        curso.nombre = form.nombre.data
+        curso.duracion = form.duracion.data
+        curso.texto_corto = form.texto_corto.data
+        curso.descripcion = form.descripcion.data
+        curso.footer = form.footer.data
         # Si el nombre cambia, actualizamos el slug
         curso.slug = slugify(curso.nombre)
 
+        # Eliminamos los módulos antiguos para reemplazarlos con los nuevos
+        for modulo in curso.modulos:
+            db.session.delete(modulo)
+        db.session.flush()
+
+        # Añadimos los módulos y sus ítems desde el formulario
+        for i, modulo_form in enumerate(form.modulos):
+            modulo = Modulo(titulo=modulo_form.titulo.data, orden=i, curso=curso)
+            db.session.add(modulo)
+            for j, item_form in enumerate(modulo_form.items):
+                item = ItemTemario(contenido=item_form.contenido.data, orden=j, modulo=modulo)
+                db.session.add(item)
         try:
             db.session.commit()
             flash(f'Curso "{curso.nombre}" actualizado exitosamente', 'success')
@@ -434,8 +474,15 @@ def nuevo_grupo():
     form = GrupoForm()
     if form.validate_on_submit():
         grupo = Grupo()
-        form.populate_obj(grupo)
+        # Populamos los campos principales, excluyendo la lista de horarios
+        form.populate_obj(grupo, exclude=['horarios'])
         try:
+            # Añadimos los horarios y países
+            for horario_form in form.horarios:
+                horario = Horario(horainicio=horario_form.horainicio.data, horafin=horario_form.horafin.data, grupo=grupo)
+                for pais_form in horario_form.paises:
+                    PaisHorario(nombre=pais_form.nombre.data, horario=horario)
+
             db.session.add(grupo)
             db.session.commit()
             flash('Grupo creado exitosamente.', 'success')
@@ -450,11 +497,59 @@ def nuevo_grupo():
 @bp.route('/grupo/<int:grupo_id>/editar', methods=['GET', 'POST'])
 @admin_required
 def editar_grupo(grupo_id):
-    grupo = Grupo.query.get_or_404(grupo_id)
-    form = GrupoForm(obj=grupo)
+    grupo = Grupo.query.options(
+        db.joinedload(Grupo.horarios).joinedload(Horario.paises)
+    ).get_or_404(grupo_id)
+
+    # Si el formulario no se está enviando (petición GET), lo pre-poblamos con los datos de la BD.
+    if not request.form:
+        form = GrupoForm(obj=grupo)
+    else:
+        # Si se está enviando (petición POST), lo creamos a partir de los datos del request.
+        form = GrupoForm(request.form)
+
+    # --- Lógica para añadir/eliminar dinámicamente SIN JAVASCRIPT ---
+    action = request.form.get('action')
+    if action:
+        if action == 'add_horario':
+            form.horarios.append_entry()
+        elif action.startswith('remove_horario_'):
+            index = int(action.split('_')[-1])
+            if 0 <= index < len(form.horarios.entries):
+                del form.horarios.entries[index]
+        elif action.startswith('add_pais_'):
+            horario_index = int(action.split('_')[-1])
+            if 0 <= horario_index < len(form.horarios.entries):
+                form.horarios[horario_index].paises.append_entry()
+        elif action.startswith('remove_pais_'):
+            horario_index, pais_index = map(int, action.split('_')[-2:])
+            if 0 <= horario_index < len(form.horarios.entries) and \
+               0 <= pais_index < len(form.horarios[horario_index].paises.entries):
+                del form.horarios[horario_index].paises.entries[pais_index]
+        
+        # Devolvemos la plantilla con el formulario modificado, sin validar ni guardar
+        return render_template('admin/form_grupo.html', title='Editar Grupo', form=form, grupo=grupo)
+    # --- Fin de la lógica dinámica ---
+
     if form.validate_on_submit():
-        form.populate_obj(grupo)
         try:
+            # Populamos los campos principales, excluyendo la lista de horarios
+            form.populate_obj(grupo, exclude=['horarios'])
+
+            # Eliminamos los horarios antiguos para reemplazarlos
+            for horario in grupo.horarios:
+                db.session.delete(horario)
+            db.session.flush()
+
+            # Añadimos los nuevos horarios y países desde el formulario
+            for horario_data in form.horarios.data:
+                if horario_data['horainicio'] and horario_data['horafin']: # Solo guardar si hay datos
+                    horario = Horario(horainicio=horario_data['horainicio'], horafin=horario_data['horafin'], grupo=grupo)
+                    db.session.add(horario)
+                    for pais_data in horario_data['paises']:
+                        if pais_data['nombre']:
+                            PaisHorario(nombre=pais_data['nombre'], horario=horario)
+
             db.session.commit()
             flash('Grupo actualizado exitosamente.', 'success')
             return redirect(url_for('admin.grupos'))

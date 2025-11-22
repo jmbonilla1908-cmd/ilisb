@@ -23,6 +23,12 @@
                     </div>
                 </div>
 
+                {# Mostramos el texto corto justo debajo de la cabecera #}
+                <div class="card-body pb-0">
+                    <p class="lead">{{ curso.texto_corto }}</p>
+                    <hr>
+                </div>
+
                 {# 3. Cuerpo de la tarjeta con descripción y pestañas #}
                 <div class="card-body">
                     {# 4. Navegación de Pestañas (CERO JS) #}
@@ -51,7 +57,7 @@
                         {% elif active_tab == 'contenido' %}
                             {% include 'cursos/_tab_contenido.html' %}
                         {% elif active_tab == 'instructor' %}
-                            {% include 'cursos/_tab_instructor.html' %}
+                            {% with grupo=primer_grupo %}{% include 'cursos/_tab_instructor.html' %}{% endwith %}
                         {% elif active_tab == 'horarios' %}
                             {% include 'cursos/_tab_horarios.html' %}
                         {% elif active_tab == 'pagos' %}

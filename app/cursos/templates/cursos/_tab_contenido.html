@@ -1,17 +1,31 @@
-<div data-tab="contenido">
-    {% set temario_json = curso.temario | from_json %}
-    {% for tema in temario_json %}
-    <div class="modulo">
-        <p>{{ tema.tipo }}</p>
-        <h2>{{ tema.titulo }}</h2>
-        <ul>
-            {% for item in tema.item %}
-            <li>{{ item }}</li>
+<div class="tab-pane fade show active" id="contenido" role="tabpanel">
+    <h4 class="mb-4">Contenido Detallado del Curso</h4>
+
+    {% if curso.modulos %}
+        <div class="accordion" id="accordionTemario">
+            {% for modulo in curso.modulos | sort(attribute='orden') %}
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="heading-{{ modulo.id }}">
+                        <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ modulo.id }}" aria-expanded="{% if loop.first %}true{% else %}false{% endif %}" aria-controls="collapse-{{ modulo.id }}">
+                            <span class="me-3 text-primary fw-bold">MÓDULO {{ "%02d"|format(loop.index) }}</span>
+                            <span class="flex-grow-1">
+                                <strong>{{ modulo.titulo }}</strong>
+                            </span>
+                        </button>
+                    </h2>
+                    <div id="collapse-{{ modulo.id }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" aria-labelledby="heading-{{ modulo.id }}" data-bs-parent="#accordionTemario">
+                        <div class="accordion-body">
+                            <ul class="list-group list-group-flush">
+                                {% for item in modulo.items | sort(attribute='orden') %}
+                                    <li class="list-group-item"><i class="fas fa-caret-right me-2 text-primary"></i>{{ item.contenido }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             {% endfor %}
-        </ul>
-    </div>
-    {% endfor %}
-    <div>
-        <p>Duración del curso: {{ curso.duracion }} horas</p>
-    </div>
+        </div>
+    {% else %}
+        <div class="alert alert-light"><p class="mb-0"><i class="fas fa-info-circle me-2"></i>El temario detallado para este curso se publicará próximamente.</p></div>
+    {% endif %}
 </div>

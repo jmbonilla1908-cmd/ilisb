@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import (StringField, PasswordField, BooleanField, SubmitField, 
-                     TextAreaField, SelectField, DateField, IntegerField, 
+                     TextAreaField, SelectField, DateField, IntegerField, FieldList, FormField, TimeField,
                      DecimalField, EmailField)
 from wtforms.validators import DataRequired, ValidationError, Optional, Email, EqualTo, NumberRange, Length
 from app.admin.models import User
@@ -67,6 +67,35 @@ class AlumnoForm(FlaskForm):
                 raise ValidationError('Este email ya está registrado por otro usuario.')
 
 
+# --- Definimos una lista centralizada de países para los formularios ---
+LISTA_PAISES = sorted([
+    'Argentina', 'Bolivia', 'Chile', 'Colombia', 'Costa Rica', 'Ecuador',
+    'El Salvador', 'EEUU', 'Guatemala', 'Honduras', 'México', 'Nicaragua',
+    'Panamá', 'Paraguay', 'Perú', 'República Dominicana', 'Uruguay', 'Venezuela'
+])
+PAISES_CHOICES = [(pais, pais) for pais in LISTA_PAISES]
+
+
+class PaisHorarioForm(FlaskForm):
+    """Subformulario para un país dentro de un horario."""
+    class Meta:
+        csrf = False
+    # ¡EL CAMBIO CLAVE! Usamos SelectField en lugar de StringField.
+    nombre = SelectField('País', validators=[DataRequired()])
+
+    def __init__(self, *args, **kwargs):
+        super(PaisHorarioForm, self).__init__(*args, **kwargs)
+        # Asignamos la lista de países a las opciones del campo.
+        self.nombre.choices = PAISES_CHOICES
+
+class HorarioForm(FlaskForm):
+    """Subformulario para un bloque de horario."""
+    class Meta:
+        csrf = False
+    horainicio = StringField('Hora Inicio (HH:MM)', validators=[DataRequired()])
+    horafin = StringField('Hora Fin (HH:MM)', validators=[DataRequired()])
+    paises = FieldList(FormField(PaisHorarioForm), min_entries=0, label='Países')
+
 class GrupoForm(FlaskForm):
     """Formulario para crear y editar grupos de cursos."""
     id_curso = SelectField('Curso', coerce=int, validators=[DataRequired()])
@@ -83,11 +112,12 @@ class GrupoForm(FlaskForm):
     visible = BooleanField('Visible para el público', default=True)
     capacidad_minima = IntegerField('Capacidad Mínima', default=5, validators=[DataRequired(), NumberRange(min=1)])
     capacidad_maxima = IntegerField('Capacidad Máxima', default=20, validators=[DataRequired(), NumberRange(min=1)])
-    precio_usuario = DecimalField('Precio Normal', places=2, validators=[DataRequired()])
-    precio_usuario_preinscripcion = DecimalField('Precio Preinscripción', places=2, validators=[Optional()])
-    precio_miembro = DecimalField('Precio Miembro', places=2, validators=[DataRequired()])
-    precio_miembro_preinscripcion = DecimalField('Precio Miembro Preinscripción', places=2, validators=[Optional()])
-    horario_descripcion = TextAreaField('Descripción del Horario (ej. "Lunes y Miércoles de 7-9pm")', validators=[Optional()])
+    precio_usuario = DecimalField('Precio Normal', places=2, validators=[DataRequired()], use_locale=False)
+    precio_usuario_preinscripcion = DecimalField('Precio Preinscripción', places=2, validators=[Optional()], use_locale=False)
+    precio_miembro = DecimalField('Precio Miembro', places=2, validators=[DataRequired()], use_locale=False)
+    precio_miembro_preinscripcion = DecimalField('Precio Miembro Preinscripción', places=2, validators=[Optional()], use_locale=False)
+    horario_descripcion = TextAreaField('Descripción General del Horario (ej. "Lunes y Miércoles")', validators=[Optional()])
+    horarios = FieldList(FormField(HorarioForm), min_entries=0, label='Bloques de Horario por Zona')
     submit = SubmitField('Guardar Grupo')
 
     def __init__(self, *args, **kwargs):
@@ -104,15 +134,30 @@ class GrupoForm(FlaskForm):
             raise ValidationError('La capacidad máxima no puede ser menor que la mínima.')
 
 
+class ItemTemarioForm(FlaskForm):
+    """Subformulario para un ítem del temario."""
+    class Meta:
+        csrf = False  # Deshabilitar CSRF para subformularios
+    contenido = StringField('Contenido del Ítem', validators=[DataRequired()])
+
+
+class ModuloForm(FlaskForm):
+    """Subformulario para un módulo del temario."""
+    class Meta:
+        csrf = False
+    titulo = StringField('Título del Módulo', validators=[DataRequired()])
+    items = FieldList(FormField(ItemTemarioForm), min_entries=1, label='Ítems del Módulo')
+
+
 class CursoForm(FlaskForm):
     """Formulario para crear y editar cursos."""
     nombre = StringField('Nombre del Curso', validators=[DataRequired()])
     duracion = IntegerField('Duración (horas)', validators=[DataRequired(), NumberRange(min=1)])
     texto_corto = TextAreaField('Texto Corto (Resumen)', validators=[DataRequired()])
     descripcion = TextAreaField('Descripción Completa', validators=[DataRequired()])
-    temario = TextAreaField('Temario (formato JSON)', validators=[DataRequired()])
     footer = TextAreaField('Contenido del Pie de Página (Opcional)', validators=[Optional()])
     banner = FileField('Imagen del Banner', validators=[
         FileAllowed(['jpg', 'jpeg', 'png'], '¡Solo se permiten imágenes (jpg, png)!')
     ])
+    modulos = FieldList(FormField(ModuloForm), min_entries=1, label='Temario del Curso')
     submit = SubmitField('Guardar Cambios')

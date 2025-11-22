@@ -1,15 +1,23 @@
-<div data-tab="instructor">
+<div class="tab-pane fade show active" id="instructor" role="tabpanel">
     {% if grupo and grupo.docente %}
-    <div>
-        <img src="{{ url_for('static', filename='img/instructores/' + grupo.docente.imagen) }}">
-    </div>
-    <div>
-        <p>{{ grupo.docente.nombre }}</p>
-        <p>{{ grupo.docente.cargo }}</p>
-        <p>Instituto Latinoamericano de Ingeniería en Sistemas de Bombeo - ILISB</p>
-        <p>{{ grupo.docente.descripcion | safe }}</p>
-    </div>
+        <div class="row align-items-center">
+            <div class="col-md-4 text-center">
+                <img src="{{ url_for('static', filename='img/instructores/' + (grupo.docente.imagen or 'default_instructor.png')) }}" 
+                     alt="Foto de {{ grupo.docente.nombre }}" 
+                     class="img-fluid rounded-circle shadow-sm mb-3 mb-md-0" 
+                     style="max-width: 200px; height: 200px; object-fit: cover;">
+            </div>
+            <div class="col-md-8">
+                <h3 class="mb-1">{{ grupo.docente.nombre }}</h3>
+                <p class="text-muted fw-bold">{{ grupo.docente.cargo }}</p>
+                <p class="text-muted small">Instituto Latinoamericano de Ingeniería en Sistemas de Bombeo - ILISB</p>
+                <hr>
+                <div class="instructor-description">
+                    {{ grupo.docente.descripcion | safe }}
+                </div>
+            </div>
+        </div>
     {% else %}
-    <p>Información del instructor no disponible.</p>
+        <div class="alert alert-light"><p class="mb-0"><i class="fas fa-info-circle me-2"></i>La información del instructor para este grupo se publicará próximamente.</p></div>
     {% endif %}
 </div>
