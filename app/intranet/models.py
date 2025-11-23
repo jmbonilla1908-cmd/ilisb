@@ -1,5 +1,5 @@
 from app import db
-from datetime import datetime
+from datetime import datetime, timezone
 from app.cursos.models import Grupo, Sesion
 
 
@@ -27,7 +27,7 @@ class IntranetDashboard(db.Model):
     tema_preferido = db.Column('tema', db.String(20), default='claro')
     fecha_ultima_visita = db.Column(
         'ultima_visita', db.TIMESTAMP, 
-        default=datetime.utcnow, onupdate=datetime.utcnow
+        default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc)
     )
     
     # Relación con Alumno
@@ -55,7 +55,7 @@ class ActividadAlumno(db.Model):
     url_visitada = db.Column('url', db.String(300))
     fecha_actividad = db.Column(
         'fecha', db.TIMESTAMP, 
-        default=datetime.utcnow, nullable=False
+        default=lambda: datetime.now(timezone.utc), nullable=False
     )
     ip_address = db.Column('ip', db.String(45))
     user_agent = db.Column('user_agent', db.String(500))
@@ -79,5 +79,4 @@ class ActividadAlumno(db.Model):
             user_agent=user_agent
         )
         db.session.add(actividad)
-        db.session.commit()
         return actividad

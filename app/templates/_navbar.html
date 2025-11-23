@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light">
     <div class="container">
-        <a class="navbar-brand" href="{{ url_for('core.index') }}" hx-get="{{ url_for('core.index') }}" hx-target="#content-wrapper" hx-swap="innerHTML" hx-push-url="true">
+        <a class="navbar-brand" href="{{ url_for('core.index') }}">
             <img src="{{ url_for('static', filename='img/logo_ilisbV2.png') }}" alt="ILISB Logo" height="70" class="d-inline-block align-top">
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
@@ -9,23 +9,20 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('core.index') }}" hx-get="{{ url_for('core.index') }}" hx-target="#content-wrapper" hx-swap="innerHTML" hx-push-url="true">Inicio</a>
+                    <a class="nav-link" href="{{ url_for('core.index') }}">Inicio</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('cursos.lista_cursos') }}" 
-                       hx-get="{{ url_for('cursos.lista_cursos') }}" 
-                       hx-target="#content-wrapper" 
-                       hx-push-url="true">Cursos</a>
+                    <a class="nav-link" href="{{ url_for('cursos.lista_cursos') }}">Cursos</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('core.membresia') }}" hx-get="{{ url_for('core.membresia') }}" hx-target="#content-wrapper" hx-swap="innerHTML" hx-push-url="true">Membresía</a>
+                    <a class="nav-link" href="{{ url_for('core.membresia') }}">Membresía</a>
                 </li>
                 {% if current_user.is_anonymous %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('core.nosotros') }}" hx-get="{{ url_for('core.nosotros') }}" hx-target="#content-wrapper" hx-swap="innerHTML" hx-push-url="true">Nosotros</a>
+                    <a class="nav-link" href="{{ url_for('core.nosotros') }}">Nosotros</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('auth.login') }}" hx-get="{{ url_for('auth.login') }}" hx-target="#content-wrapper" hx-swap="innerHTML" hx-push-url="true">Login</a>
+                    <a class="nav-link" href="{{ url_for('auth.login') }}">Login</a>
                 </li>
                 {% else %}
                 <li class="nav-item">

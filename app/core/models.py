@@ -1,5 +1,5 @@
 from app import db
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class ConfiguracionSitio(db.Model):
@@ -43,7 +43,7 @@ class ConfiguracionSitio(db.Model):
     
     fecha_actualizacion = db.Column(
         'fecha_actualizacion', db.TIMESTAMP,
-        default=datetime.utcnow, onupdate=datetime.utcnow
+        default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc)
     )
 
     def __repr__(self):
@@ -80,7 +80,7 @@ class TestimonioAlumno(db.Model):
     
     fecha_creacion = db.Column(
         'fecha_creacion', db.TIMESTAMP,
-        default=datetime.utcnow, nullable=False
+        default=lambda: datetime.now(timezone.utc), nullable=False
     )
     fecha_aprobacion = db.Column('fecha_aprobacion', db.TIMESTAMP)
     
@@ -124,7 +124,7 @@ class EstadisticaSitio(db.Model):
     
     fecha_actualizacion = db.Column(
         'fecha_actualizacion', db.TIMESTAMP,
-        default=datetime.utcnow, onupdate=datetime.utcnow
+        default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc)
     )
 
     def __repr__(self):
@@ -156,7 +156,6 @@ class EstadisticaSitio(db.Model):
             )
             db.session.add(estadistica)
         
-        db.session.commit()
         return estadistica
 
 
@@ -180,11 +179,11 @@ class PaginaEstatica(db.Model):
     publicada = db.Column('publicada', db.Boolean, default=True, nullable=False)
     fecha_creacion = db.Column(
         'fecha_creacion', db.TIMESTAMP,
-        default=datetime.utcnow, nullable=False
+        default=lambda: datetime.now(timezone.utc), nullable=False
     )
     fecha_actualizacion = db.Column(
         'fecha_actualizacion', db.TIMESTAMP,
-        default=datetime.utcnow, onupdate=datetime.utcnow
+        default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc)
     )
 
     def __repr__(self):

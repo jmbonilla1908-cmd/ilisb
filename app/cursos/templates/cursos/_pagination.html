@@ -2,24 +2,18 @@
     <ul class="pagination justify-content-center">
         {# Botón 'Anterior' #}
         <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
-            <a class="page-link" href="#"
-               hx-get="{{ url_for('cursos.lista_cursos', page=pagination.prev_num, especializacion_id=especializacion_id) }}"
-               hx-target="#cursos-content"
-               hx-select="#cursos-content"
-               hx-swap="innerHTML"
-               hx-push-url="true">&laquo;</a>
+            {% if pagination.has_prev %}
+                <a class="page-link" href="{{ url_for('cursos.lista_cursos', page=pagination.prev_num, especializacion_id=especializacion_id) }}">&laquo;</a>
+            {% else %}
+                <span class="page-link">&laquo;</span>
+            {% endif %}
         </li>
 
         {# Números de página #}
         {% for p in pagination.iter_pages() %}
             {% if p %}
                 <li class="page-item {% if p == pagination.page %}active{% endif %}">
-                    <a class="page-link" href="#"
-                       hx-get="{{ url_for('cursos.lista_cursos', page=p, especializacion_id=especializacion_id) }}"
-                       hx-target="#cursos-content"
-                       hx-select="#cursos-content"
-                       hx-swap="innerHTML"
-                       hx-push-url="true">{{ p }}</a>
+                    <a class="page-link" href="{{ url_for('cursos.lista_cursos', page=p, especializacion_id=especializacion_id) }}">{{ p }}</a>
                 </li>
             {% else %}
                 <li class="page-item disabled"><span class="page-link">…</span></li>
@@ -28,12 +22,11 @@
 
         {# Botón 'Siguiente' #}
         <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
-            <a class="page-link" href="#"
-               hx-get="{{ url_for('cursos.lista_cursos', page=pagination.next_num, especializacion_id=especializacion_id) }}"
-               hx-target="#cursos-content"
-               hx-select="#cursos-content"
-               hx-swap="innerHTML"
-               hx-push-url="true">&raquo;</a>
+            {% if pagination.has_next %}
+                <a class="page-link" href="{{ url_for('cursos.lista_cursos', page=pagination.next_num, especializacion_id=especializacion_id) }}">&raquo;</a>
+            {% else %}
+                <span class="page-link">&raquo;</span>
+            {% endif %}
         </li>
     </ul>
 </nav>

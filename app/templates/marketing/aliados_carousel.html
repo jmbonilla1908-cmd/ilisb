@@ -1,11 +1,9 @@
-{# Template para carousel de aliados estratégicos - Reemplaza ads_banner.html #}
-{% if aliados_estrategicos %}
 <div class="container my-5">
     <h4 class="text-center mb-4 text-muted">Nuestros Aliados Estratégicos</h4>
     
     <div id="aliadosCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
         <div class="carousel-inner">
-            {% set slides = aliados_estrategicos | batch(4) %}
+            {% set slides = aliados_estrategicos | batch(4) | list %}
             {% for slide_aliados in slides %}
             <div class="carousel-item {% if loop.first %}active{% endif %}" data-bs-interval="5000">
                 <div class="row align-items-center justify-content-center">
@@ -44,8 +42,6 @@
             {% endfor %}
         </div>
         
-        {# Controles del carousel solo si hay más de una slide #}
-        {% if slides|length > 1 %}
         <button class="carousel-control-prev" type="button" data-bs-target="#aliadosCarousel" data-bs-slide="prev">
             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
             <span class="visually-hidden">Anterior</span>
@@ -54,79 +50,6 @@
             <span class="carousel-control-next-icon" aria-hidden="true"></span>
             <span class="visually-hidden">Siguiente</span>
         </button>
-        {% endif %}
+
     </div>
 </div>
-
-<style>
-.aliado-card {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    border-radius: 10px;
-}
-
-.aliado-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-}
-
-.aliado-logo {
-    transition: opacity 0.3s ease;
-}
-
-.aliado-link:hover .aliado-logo {
-    opacity: 0.8;
-}
-
-.carousel-control-prev,
-.carousel-control-next {
-    width: 5%;
-    color: #6c757d;
-}
-
-.carousel-control-prev-icon,
-.carousel-control-next-icon {
-    background-color: #6c757d;
-    border-radius: 50%;
-    padding: 20px;
-}
-</style>
-
-<script>
-// JavaScript para manejar clics en aliados y registrar analytics
-document.addEventListener('DOMContentLoaded', function() {
-    const aliadoLinks = document.querySelectorAll('.aliado-link');
-    
-    aliadoLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const aliadoId = this.dataset.aliadoId;
-            const url = this.dataset.url;
-            
-            // Registrar clic vía API
-            fetch(`/marketing/api/aliado/${aliadoId}/clic`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && url) {
-                    // Abrir en nueva pestaña
-                    window.open(url, '_blank');
-                }
-            })
-            .catch(error => {
-                console.error('Error registrando clic:', error);
-                // Abrir URL de todos modos
-                if (url) {
-                    window.open(url, '_blank');
-                }
-            });
-        });
-    });
-});
-</script>
-
-<hr>
-{% endif %}

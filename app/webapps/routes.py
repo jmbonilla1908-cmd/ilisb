@@ -160,7 +160,7 @@ def index():
     populares = Aplicativo.obtener_populares(limite=6)
     recientes = Aplicativo.obtener_recientes(limite=6)    
     tipos_menu = TipoAplicativo.query.order_by(TipoAplicativo.orden).all()
-    return render_template('index.html', populares=populares, recientes=recientes, tipos=tipos_menu)
+    return render_template('webapps/index.html', populares=populares, recientes=recientes, tipos=tipos_menu)
 
 
 @bp.route('/tipo/<slug>')
@@ -497,8 +497,6 @@ def aplicativo_detail(slug):
     # Si no, mostramos la página de detalle genérica (comportamiento anterior).
     return render_template('webapps/aplicativo.html', aplicativo=aplicativo, tipos=tipos_menu)
 
-
-# --- NUEVAS RUTAS PARA LA CALCULADORA INTERACTIVA CON PLOTLY Y HTMX ---
 
 def _crear_grafico_curva_sistema(puntos_q, puntos_h, cota, variacion_max, K, frecuencia_actual, nivel_actual, incluir_js=False):
     fig = go.Figure()

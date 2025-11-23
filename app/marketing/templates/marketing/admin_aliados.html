@@ -190,46 +190,4 @@
     </div>
 </div>
 
-<script>
-// Toggle activo/inactivo
-document.addEventListener('DOMContentLoaded', function() {
-    const toggles = document.querySelectorAll('.toggle-aliado');
-    
-    toggles.forEach(toggle => {
-        toggle.addEventListener('change', function() {
-            const aliadoId = this.dataset.aliadoId;
-            
-            fetch(`/marketing/api/aliado/${aliadoId}/toggle`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Opcional: mostrar mensaje de éxito
-                    console.log('Estado actualizado:', data.message);
-                } else {
-                    // Revertir el toggle si hubo error
-                    this.checked = !this.checked;
-                    alert('Error al actualizar estado');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                this.checked = !this.checked;
-                alert('Error de conexión');
-            });
-        });
-    });
-});
-
-function confirmarEliminar(aliadoId) {
-    if (confirm('¿Estás seguro de que quieres eliminar este aliado estratégico?')) {
-        // Implementar eliminación
-        alert('Función de eliminación no implementada aún');
-    }
-}
-</script>
 {% endblock %}

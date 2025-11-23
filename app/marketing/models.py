@@ -68,13 +68,11 @@ class AliadoEstrategico(db.Model):
     def incrementar_impresiones(self):
         """Incrementa contador de impresiones."""
         self.impresiones += 1
-        db.session.commit()
-    
+        
     def incrementar_clics(self):
         """Incrementa contador de clics."""
         self.clics += 1
-        db.session.commit()
-    
+        
     @classmethod
     def obtener_activos(cls, limite=None):
         """Obtiene aliados activos ordenados."""
@@ -148,9 +146,9 @@ class Anuncio(db.Model):
     def incrementar_impresiones(self):
         """Incrementa contador de impresiones."""
         self.impresiones += 1
-        db.session.commit()
+        
     
     def incrementar_clics(self):
         """Incrementa contador de clics."""
         self.clics += 1
-        db.session.commit()
+        

@@ -1,4 +1,4 @@
-{% extends "htmx_base.html" if htmx else "base.html" %}
+{% extends "base.html" %}
 
 {% block content %}
     <!-- Hero Section -->
@@ -17,21 +17,21 @@
             <div class="h-100 p-5 text-white bg-dark rounded-3">
                 <h2>Cursos Especializados</h2>
                 <p>Impartidos por expertos, nuestros cursos están diseñados para potenciar y ampliar los conocimientos de profesionales en sistemas de bombeo.</p>
-                <a href="{{ url_for('cursos.lista_cursos') }}" class="btn btn-outline-light" hx-get="{{ url_for('cursos.lista_cursos') }}" hx-target="#content-wrapper" hx-swap="innerHTML" hx-push-url="true">Ver Cursos</a>
+                <a href="{{ url_for('cursos.lista_cursos') }}" class="btn btn-outline-light">Ver Cursos</a>
             </div>
         </div>
         <div class="col-md-4 mb-4">
             <div class="h-100 p-5 bg-light border rounded-3">
                 <h2>Centro de Cálculos</h2>
                 <p>Nuestro Centro de Calculadoras para Bombas proporciona aplicativos de ingeniería que agilizan actividades relacionadas con el diseño, dimensionamiento y funcionamiento de sistemas de bombeo.</p>
-                <a href="{{ url_for('webapps.curvas_bomba') }}" class="btn btn-outline-secondary">Ir a Aplicativos</a>
+                <a href="{{ url_for('webapps.index') }}" class="btn btn-outline-secondary">Ir a Aplicativos</a>
             </div>
         </div>
         <div class="col-md-4 mb-4">
             <div class="h-100 p-5 text-white bg-primary rounded-3">
                 <h2>Membresía</h2>
                 <p>Nuestros profesionales certificados gozan del respaldo académico necesario para ofrecer servicios de consultoría y soporte técnico, resolviendo desafíos técnicos en sistemas de bombeo.</p>
-                <a href="{{ url_for('core.membresia') }}" class="btn btn-outline-light" hx-get="{{ url_for('core.membresia') }}" hx-target="#content-wrapper" hx-swap="innerHTML" hx-push-url="true">Únete Ahora</a>
+                <a href="{{ url_for('core.membresia') }}" class="btn btn-outline-light">Únete Ahora</a>
             </div>
         </div>
     </div>

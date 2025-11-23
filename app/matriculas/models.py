@@ -1,5 +1,5 @@
 from app import db
-from datetime import datetime
+from datetime import datetime, timezone
 
 class AlumnoGrupo(db.Model):
     """
@@ -13,7 +13,7 @@ class AlumnoGrupo(db.Model):
     alumno_id = db.Column('idAlumno', db.Integer, db.ForeignKey('alumno.idAlumno'), nullable=False)
     grupo_id = db.Column('idGrupo', db.Integer, db.ForeignKey('grupo.idgrupo'), nullable=False)
     
-    fecha_inscripcion = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    fecha_inscripcion = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
     estado_matricula = db.Column(db.String(50), default='INSCRITO', nullable=False) # Ej: INSCRITO, RETIRADO, COMPLETADO
     calificacion = db.Column(db.Numeric(4, 2), nullable=True)
 

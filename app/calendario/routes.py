@@ -25,7 +25,6 @@ class CustomHTMLCalendar(calendar.HTMLCalendar):
 
         if day in self.eventos:
             css_class += ' table-primary'
-            # Usamos hx-boost="true" para que HTMX intercepte el clic y lo cargue en el content-wrapper
             return (f'<td class="{css_class}">'
                     f'<a href="{self.eventos[day]["url"]}" '
                     f'hx-boost="true" '

@@ -1,5 +1,5 @@
 from app import db
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from app.cursos.models import Grupo, Sesion
 from app.matriculas.models import AlumnoGrupo
 
@@ -26,7 +26,7 @@ class EventoCalendario(db.Model):
     activo = db.Column('activo', db.Boolean, default=True, nullable=False)
     fecha_creacion = db.Column(
         'fecha_creacion', db.TIMESTAMP,
-        default=datetime.utcnow, nullable=False
+        default=lambda: datetime.now(timezone.utc), nullable=False
     )
     
     def __repr__(self):
@@ -71,7 +71,7 @@ class RecordatorioPersonal(db.Model):
     )
     fecha_creacion = db.Column(
         'fecha_creacion', db.TIMESTAMP,
-        default=datetime.utcnow, nullable=False
+        default=lambda: datetime.now(timezone.utc), nullable=False
     )
     
     # Relación con Alumno

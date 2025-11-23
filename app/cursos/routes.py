@@ -29,7 +29,7 @@ def lista_cursos():
         query = query.join(Curso.especializaciones).filter(Especializacion.id == especializacion_id)
 
     # Usamos el objeto de paginación de Flask-SQLAlchemy
-    pagination = query.paginate(page=page, per_page=6, error_out=False)
+    pagination = query.paginate(page=page, per_page=9, error_out=False)
     cursos = pagination.items
 
     return render_template('cursos/lista_cursos.html', title='Nuestros Cursos', cursos=cursos, especializaciones=especializaciones, pagination=pagination, especializacion_id=especializacion_id)
