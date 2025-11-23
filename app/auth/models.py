@@ -3,6 +3,7 @@ from flask_login import UserMixin
 from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
 # Esta función es requerida por Flask-Login para cargar un usuario desde la sesión
 @login_manager.user_loader
 def load_user(id):
@@ -17,6 +18,22 @@ def load_user(id):
     else:
         # Compatibilidad hacia atrás: asumir que es un alumno
         return Alumno.query.get(int(id))
+
+
+class Membresia(db.Model):
+    """
+    Define los tipos de membresía disponibles en el sistema.
+    """
+    __tablename__ = 'membresia'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100), unique=True, nullable=False) # Ej: "Anual", "Mensual"
+    precio_base = db.Column(db.Numeric(10, 2), nullable=False)
+    moneda = db.Column(db.String(10), nullable=False, default='USD')
+    duracion_cantidad = db.Column(db.Integer, nullable=False, default=1)
+    duracion_unidad = db.Column(db.String(20), nullable=False, default='months') # 'days', 'months', 'years'
+
+    def __repr__(self):
+        return f'<Membresia {self.nombre}>'
 
 
 class Alumno(UserMixin, db.Model):
@@ -44,6 +61,8 @@ class Alumno(UserMixin, db.Model):
     fecha_email_cambio = db.Column('fechaEmailCambio', db.DateTime)
     apuntes = db.Column('apuntes', db.String(500))
     
+    # Las columnas 'es_miembro' y 'fecha_fin_membresia' han sido eliminadas.
+
     # Relación con la tabla de asociación AlumnoGrupo (importada desde matriculas)
     from app.matriculas.models import AlumnoGrupo
     grupos_asociados = db.relationship('AlumnoGrupo', back_populates='alumno', cascade="all, delete-orphan")
@@ -60,14 +79,20 @@ class Alumno(UserMixin, db.Model):
         return f'alumno_{self.id}'
 
     @property
-    def es_miembro_activo(self):
+    def membresia_activa_obj(self):
         """Verifica si el alumno tiene una membresía activa y no revertida."""
         from datetime import datetime
-        membresia_activa = self.membresias.filter(
+        # Devuelve el objeto de la membresía activa más reciente, o None si no hay ninguna.
+        return self.membresias.filter(
             AlumnoMembresia.revertido == False,
+            # Reactivamos la validación de fecha, que es crucial para la lógica de negocio.
             AlumnoMembresia.fecha_fin >= datetime.now(timezone.utc)
-        ).first()
-        return membresia_activa is not None
+        ).order_by(AlumnoMembresia.fecha_fin.desc()).first()
+
+    @property
+    def es_miembro_activo(self):
+        """Propiedad simple que devuelve True o False."""
+        return self.membresia_activa_obj is not None
 
     def __repr__(self):
         return f'<Alumno {self.nombres} {self.apellidos}>'
@@ -80,10 +105,12 @@ class AlumnoMembresia(db.Model):
     __tablename__ = 'alumno_membresia'
 
     id = db.Column(db.Integer, primary_key=True)
-    alumno_id = db.Column(db.Integer, db.ForeignKey('alumno.idAlumno'), nullable=False)
-    tipo_membresia = db.Column(db.String(50), nullable=False, default='anual') # Ej: anual, semestral
+    alumno_id = db.Column(db.Integer, db.ForeignKey('alumno.idAlumno', ondelete='CASCADE'), nullable=False)
+    membresia_id = db.Column(db.Integer, db.ForeignKey('membresia.id'), nullable=False)
+    
     fecha_inicio = db.Column(db.DateTime, nullable=False, default=db.func.current_timestamp())
     fecha_fin = db.Column(db.DateTime, nullable=False)
+    
     id_pago = db.Column(db.String(100)) # ID de la transacción (Stripe, PayPal, etc.)
     monto = db.Column(db.Numeric(10, 2))
     revertido = db.Column(db.Boolean, default=False, nullable=False)
@@ -92,6 +119,11 @@ class AlumnoMembresia(db.Model):
     alumno = db.relationship(
         'Alumno', 
         backref=db.backref('membresias', lazy='dynamic', cascade="all, delete-orphan")
+    )
+    # Relación con el tipo de membresía
+    tipo_membresia_info = db.relationship(
+        'Membresia',
+        backref=db.backref('instancias', lazy='dynamic')
     )
 
     def __repr__(self):

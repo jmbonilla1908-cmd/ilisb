@@ -5,6 +5,7 @@ from decimal import Decimal, getcontext
 import numpy as np
 import plotly.graph_objects as go
 import plotly.io as pio
+import base64
 from app.auth.decorators import admin_required
 from . import bp
 from .models import Aplicativo, TipoAplicativo
@@ -159,7 +160,7 @@ def index():
     populares = Aplicativo.obtener_populares(limite=6)
     recientes = Aplicativo.obtener_recientes(limite=6)    
     tipos_menu = TipoAplicativo.query.order_by(TipoAplicativo.orden).all()
-    return render_template('webapps/index.html', populares=populares, recientes=recientes, tipos=tipos_menu)
+    return render_template('index.html', populares=populares, recientes=recientes, tipos=tipos_menu)
 
 
 @bp.route('/tipo/<slug>')
@@ -194,11 +195,11 @@ def aplicativo_detail(slug):
     ).first_or_404()
     
     # Verificar acceso
-    if aplicativo.requiere_membresia and not hasattr(current_user, 'es_miembro_activo'):
+    if aplicativo.requiere_membresia and not (current_user.is_authenticated and hasattr(current_user, 'es_miembro_activo') and current_user.es_miembro_activo):
         flash('Necesitas una membresía activa para acceder a esta herramienta.')
         return redirect(url_for('core.membresia'))
     
-    if aplicativo.es_premium and not hasattr(current_user, 'es_premium'):
+    if aplicativo.es_premium and not (current_user.is_authenticated and hasattr(current_user, 'es_premium') and current_user.es_premium):
         flash('Esta herramienta requiere membresía premium.')
         return redirect(url_for('core.premium'))
     
@@ -208,7 +209,6 @@ def aplicativo_detail(slug):
     # --- LÓGICA MEJORADA ---
     # Si el aplicativo tiene un archivo de plantilla específico, lo usamos.
     if aplicativo.template_file:
-        # Pasamos 'aplicativo' y 'tipos_menu' a todas las plantillas de aplicativos
         # Para la calculadora, también pasamos el gráfico inicial.
         if aplicativo.template_file == 'webapps/calculadora_curva_sistema.html':
             args = request.args.copy()
@@ -288,7 +288,7 @@ def aplicativo_detail(slug):
 
             # Usamos los 'args' modificados para repintar el formulario
             return render_template(aplicativo.template_file, aplicativo=aplicativo, graph_html=graph_html, request=args, tipos=tipos_menu)
-        
+
         elif aplicativo.template_file == 'webapps/calculadora_perdidas.html':
             resultados = None
             graph_html = None
@@ -371,6 +371,7 @@ def aplicativo_detail(slug):
                 graph_html = _crear_grafico_perdidas_accesorios(resultados['hf_tuberia'], resultados['hf_accesorios'], incluir_js=True)
 
             return render_template(aplicativo.template_file, aplicativo=aplicativo, accesorios=ACCESORIOS, resultados=resultados, graph_html=graph_html, tipos=tipos_menu)
+
 
         elif aplicativo.template_file == 'webapps/conversor_unidades.html':
             magnitud_activa = request.args.get('magnitud', 'caudal')

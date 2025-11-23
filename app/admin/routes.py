@@ -5,10 +5,10 @@ from werkzeug.utils import secure_filename
 from app import db
 from app.admin import bp
 from app.admin.decorators import admin_required, superuser_required # type: ignore
-from app.admin.forms import AdminLoginForm, DocenteForm, AlumnoForm, GrupoForm, CursoForm, AdminUserForm, ModuloForm, ItemTemarioForm, HorarioForm, PaisHorarioForm
+from app.admin.forms import AdminLoginForm, DocenteForm, AlumnoForm, GrupoForm, CursoForm, AdminUserForm, ModuloForm, ItemTemarioForm, HorarioForm, PaisHorarioForm, DeleteForm
 from app.admin.models import User
 from app.cursos.models import Curso, Docente, Grupo, Modulo, ItemTemario, Horario, PaisHorario
-from app.auth.models import Alumno
+from app.auth.models import Alumno, AlumnoMembresia, Membresia
 import secrets
 import os
 from datetime import datetime, timezone
@@ -270,13 +270,49 @@ def editar_curso(slug):
 def alumnos():
     """Gestión de alumnos"""
     page = request.args.get('page', 1, type=int)
+    
+    # 1. Obtenemos la paginación de alumnos de forma simple.
     pagination = Alumno.query.order_by(
         Alumno.id.asc() # Mantenemos asc, ya estaba correcto
     ).paginate(page=page, per_page=15, error_out=False)
+
+    # 2. (nota) no necesitamos filtrar por los IDs de la página para
+    #    obtener las fechas; calculamos el mapeo a partir de toda la tabla.
+
+    # 3. Hacemos una segunda consulta para obtener la primera fecha de cada uno de esos alumnos.
+    # Obtenemos la fecha de inicio más reciente (`max`) de las membresías
+    # asociadas a los alumnos de la página actual. Esto devuelve el valor
+    # `fecha_inicio` tal cual (no la fecha de fin ni otro campo).
+    # Obtenemos la fecha de inicio (MAX) por alumno para TODO el conjunto
+    # de membresías en la base de datos. Esto asegura que si un alumno tiene
+    # registros en `alumno_membresia`, su `fecha_inicio` estará disponible
+    # en la plantilla aunque la paginación muestre una página distinta.
+    fechas_registro_query = db.session.query(
+        AlumnoMembresia.alumno_id,
+        db.func.min(AlumnoMembresia.fecha_inicio)
+    ).group_by(AlumnoMembresia.alumno_id).all()
+    mapa_de_fechas_inicio = dict(fechas_registro_query)
+
+
+    # --- CÁLCULO DE ESTADÍSTICAS TOTALES ---
+    # Contamos todos los alumnos con correo verificado
+    activos_count = Alumno.query.filter_by(correo_verificado=True).count()
+
+    # Contamos los IDs de alumnos distintos que tienen al menos una membresía activa
+    miembros_activos_count = db.session.query(AlumnoMembresia.alumno_id).filter(
+        AlumnoMembresia.revertido == False,
+        AlumnoMembresia.fecha_fin >= datetime.now(timezone.utc)
+    ).distinct().count()
     
+    delete_form = DeleteForm()
+
     return render_template('admin/alumnos.html',
                            title='Gestión de Alumnos',
-                           pagination=pagination)
+                           pagination=pagination,
+                           mapa_de_fechas_inicio=mapa_de_fechas_inicio,
+                           activos_count=activos_count,
+                           miembros_activos_count=miembros_activos_count,
+                           delete_form=delete_form)
 
 
 @bp.route('/docentes')
@@ -436,12 +472,41 @@ def nuevo_alumno():
 @admin_required
 def editar_alumno(alumno_id):
     alumno = Alumno.query.get_or_404(alumno_id)
-    # Pasamos el email original al formulario para la validación de unicidad
-    form = AlumnoForm(obj=alumno, original_email=alumno.email.lower())
+    form = AlumnoForm(obj=alumno, original_email=alumno.email.lower(), alumno_obj=alumno)
     
     if form.validate_on_submit():
-        # Rellenamos el objeto alumno existente con los nuevos datos
-        form.populate_obj(alumno)
+        alumno.nombres = form.nombres.data
+        alumno.apellidos = form.apellidos.data
+        alumno.email = form.email.data
+        alumno.imagen = form.imagen.data
+        
+        # --- LÓGICA DE MEMBRESÍA UNIFICADA ---
+        membresia_manual_activa = alumno.membresias.join(Membresia).filter(Membresia.nombre == 'Manual Admin').first()
+        quiere_ser_miembro = form.es_miembro.data
+
+        if quiere_ser_miembro and not membresia_manual_activa:
+            # El admin quiere AÑADIR una membresía manual y no existe una.
+            membresia_manual_tipo = Membresia.query.filter_by(nombre='Manual Admin').first()
+            if membresia_manual_tipo:
+                print(f"Concediendo membresía manual al alumno ID {alumno.id}")
+                nueva_membresia = AlumnoMembresia(
+                    alumno_id=alumno.id,
+                    membresia_id=membresia_manual_tipo.id,
+                    fecha_inicio=datetime.now(timezone.utc),
+                    fecha_fin=datetime(2999, 12, 31), # Una fecha muy lejana
+                    id_pago='ADMIN_GRANT',
+                    monto=0
+                )
+                db.session.add(nueva_membresia)
+        elif not quiere_ser_miembro and membresia_manual_activa:
+            # El admin quiere QUITAR una membresía manual y sí existe una.
+            if membresia_manual_activa:
+                print(f"Revocando membresía manual del alumno ID {alumno.id}")
+                db.session.delete(membresia_manual_activa)
+        
+        if form.password.data:
+            alumno.set_password(form.password.data)
+            
         try:
             db.session.commit()
             flash('Alumno actualizado exitosamente.', 'success')
@@ -449,6 +514,7 @@ def editar_alumno(alumno_id):
         except Exception as e:
             db.session.rollback()
             flash(f'Error al actualizar alumno: {e}', 'danger')
+
             
     return render_template('admin/form_alumno.html', 
                            title='Editar Alumno', 
@@ -467,6 +533,19 @@ def eliminar_alumno(alumno_id):
         db.session.rollback()
         flash(f'Error al eliminar alumno: {e}', 'danger')
     return redirect(url_for('admin.alumnos'))
+
+@bp.route('/alumno/<int:alumno_id>/cursos')
+@admin_required
+def cursos_alumno(alumno_id):
+    """Muestra los cursos en los que está inscrito un alumno."""
+    alumno = Alumno.query.get_or_404(alumno_id)
+    # La relación 'grupos_asociados' nos da los objetos AlumnoGrupo
+    # A través de ellos, podemos llegar al Grupo y luego al Curso.
+    inscripciones = alumno.grupos_asociados
+    return render_template('admin/cursos_alumno.html', 
+                           title=f"Cursos de {alumno.nombres}",
+                           alumno=alumno,
+                           inscripciones=inscripciones)
 
 @bp.route('/grupo/nuevo', methods=['GET', 'POST'])
 @admin_required

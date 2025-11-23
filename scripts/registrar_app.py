@@ -328,8 +328,23 @@ def limpiar_datos_obsoletos():
             db.session.commit()
             print("Limpieza de datos obsoletos completada.")
 
+def registrar_calculadora_curva_bomba():
+    """ELIMINA la calculadora de curva de bomba simple."""
+    with app.app_context():
+        nombre_app = "Calculadora de Curva de Bomba"
+        app_existente = Aplicativo.query.filter_by(nombre=nombre_app).first()
+        
+        if app_existente:
+            print(f"Eliminando el aplicativo '{nombre_app}' de la base de datos...")
+            db.session.delete(app_existente)
+            db.session.commit()
+            print(f"¡Aplicativo '{nombre_app}' eliminado exitosamente!")
+        else:
+            print(f"El aplicativo '{nombre_app}' no se encontró en la base de datos. No se hace nada.")
+
 
 if __name__ == '__main__':
+    registrar_calculadora_curva_bomba()
     sincronizar_estructura()
     limpiar_categorias_vacias()
     limpiar_datos_obsoletos()

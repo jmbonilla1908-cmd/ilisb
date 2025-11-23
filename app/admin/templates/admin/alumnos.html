@@ -26,7 +26,8 @@
                 <div class="col-md-4">
                     <div class="card bg-success text-white">
                         <div class="card-body">
-                            <h5>{{ pagination.items | selectattr('is_active') | list | length }}</h5>
+                            {# Usamos la nueva variable calculada en el backend #}
+                            <h5>{{ activos_count }}</h5>
                             <p class="mb-0">Activos</p>
                         </div>
                     </div>
@@ -34,7 +35,7 @@
                 <div class="col-md-4">
                     <div class="card bg-info text-white">
                         <div class="card-body">
-                            <h5>{{ pagination.items | selectattr('es_miembro_activo') | list | length }}</h5>
+                            <h5>{{ miembros_activos_count }}</h5>
                             <p class="mb-0">Miembros ILISB</p>
                         </div>
                     </div>
@@ -42,6 +43,7 @@
             </div>
 
             {# Tabla de alumnos #}
+            
             <div class="card">
                 <div class="card-body">
                     {% if pagination and pagination.items %}
@@ -58,23 +60,29 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                {# Iteramos sobre los alumnos de la paginación #}
                                 {% for alumno in pagination.items %}
                                 <tr>
                                     <td>{{ alumno.id }}</td>
                                     <td>
-                                        <strong>{{ alumno.first_name }} {{ alumno.last_name }}</strong>
-                                        <br><small class="text-muted">{{ alumno.username }}</small>
+                                        <strong>{{ alumno.nombres }} {{ alumno.apellidos }}</strong>
                                     </td>
                                     <td>{{ alumno.email }}</td>
-                                    <td>{{ alumno.date_joined.strftime('%Y-%m-%d') if alumno.date_joined else 'N/A' }}</td>
+                                    {% set fecha_inicio = mapa_de_fechas_inicio.get(alumno.id) %}
+                                    <td>{{ fecha_inicio.strftime('%Y-%m-%d') if fecha_inicio else 'N/A' }}</td>
                                     <td>
-                                        {% if alumno.is_active %}
+                                        {# Ahora comprobamos el estado real del alumno #}
+                                        {% if alumno.correo_verificado %}
                                             <span class="badge bg-success">Activo</span>
-                                        {% else %}
-                                            <span class="badge bg-danger">Inactivo</span>
                                         {% endif %}
+                                        
+                                        {# Muestra la etiqueta 'Miembro' si el campo es verdadero #}
                                         {% if alumno.es_miembro_activo %}
-                                            <span class="badge bg-info">Miembro</span>
+                                            <span class="badge bg-info text-dark">Miembro</span>
+                                            {# Accedemos al nombre del tipo de membresía a través de las relaciones #}
+                                            {% if alumno.membresia_activa_obj and alumno.membresia_activa_obj.tipo_membresia_info %}
+                                                <span class="badge bg-warning text-dark">{{ alumno.membresia_activa_obj.tipo_membresia_info.nombre }}</span>
+                                            {% endif %}
                                         {% endif %}
                                     </td>
                                     <td>
@@ -83,12 +91,15 @@
                                                class="btn btn-outline-primary" title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <a href="#" class="btn btn-outline-secondary" title="Ver Cursos">
+                                            <a href="{{ url_for('admin.cursos_alumno', alumno_id=alumno.id) }}" class="btn btn-outline-secondary" title="Ver Cursos">
                                                 <i class="fas fa-graduation-cap"></i>
                                             </a>
-                                            <button class="btn btn-outline-danger" title="Eliminar (Próximamente)" disabled>
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+                                            <form method="POST" action="{{ url_for('admin.eliminar_alumno', alumno_id=alumno.id) }}" class="d-inline">
+                                                {{ delete_form.hidden_tag() }}
+                                                <button type="submit" name="submit" class="btn btn-outline-danger" title="Eliminar">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>

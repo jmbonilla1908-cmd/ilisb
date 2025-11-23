@@ -1,0 +1,53 @@
+{% extends "admin/_layout.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block admin_content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>{{ title }}</h2>
+        <a href="{{ url_for('admin.alumnos') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Volver a la lista de Alumnos
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if inscripciones %}
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Curso</th>
+                            <th>Grupo ID</th>
+                            <th>Estado del Grupo</th>
+                            <th>Fecha de Inscripción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inscripcion in inscripciones %}
+                        <tr>
+                            <td>
+                                <strong>{{ inscripcion.grupo.curso.nombre }}</strong>
+                                <br><small class="text-muted">Docente: {{ inscripcion.grupo.docente.nombre }}</small>
+                            </td>
+                            <td>{{ inscripcion.grupo.id }}</td>
+                            <td>
+                                {% set estado_color = {'PROPUESTO': 'secondary', 'CONFIRMADO': 'success', 'EN_CURSO': 'info', 'FINALIZADO': 'dark', 'CANCELADO': 'danger'} %}
+                                <span class="badge bg-{{ estado_color.get(inscripcion.grupo.estado, 'light') }}">{{ inscripcion.grupo.estado.replace('_', ' ') }}</span>
+                            </td>
+                            <td>{{ inscripcion.fecha_inscripcion.strftime('%d-%m-%Y') if inscripcion.fecha_inscripcion else 'N/A' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center text-muted py-5">
+                <h5>Este alumno no está inscrito en ningún curso.</h5>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

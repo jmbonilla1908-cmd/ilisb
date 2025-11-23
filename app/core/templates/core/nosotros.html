@@ -24,8 +24,7 @@
             <div class="h-100 p-5 bg-light border rounded-3">
                 <h2>Centro de Cálculos</h2>
                 <p>Nuestro Centro de Calculadoras para Bombas proporciona aplicativos de ingeniería que agilizan actividades relacionadas con el diseño, dimensionamiento y funcionamiento de sistemas de bombeo.</p>
-                {# TODO: Habilitar este enlace cuando la ruta 'webapps.curvas_bomba' esté implementada. #}
-                <a href="#" class="btn btn-outline-secondary disabled" aria-disabled="true">Ir a Aplicativos (Próximamente)</a>
+                <a href="{{ url_for('webapps.curvas_bomba') }}" class="btn btn-outline-secondary">Ir a Aplicativos</a>
             </div>
         </div>
         <div class="col-md-4 mb-4">

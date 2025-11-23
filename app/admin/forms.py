@@ -55,11 +55,17 @@ class AlumnoForm(FlaskForm):
                              validators=[Optional(), EqualTo('password2', message='Las contraseñas deben coincidir.')])
     password2 = PasswordField('Confirmar Contraseña', validators=[Optional()])
     imagen = StringField('URL de la Imagen', validators=[Optional()])
+    es_miembro = BooleanField('Es Miembro de ILISB')
+    fecha_fin_membresia = DateField('Fecha Fin de Membresía', format='%Y-%m-%d', validators=[Optional()])
     submit = SubmitField('Guardar Alumno')
 
-    def __init__(self, original_email=None, *args, **kwargs):
+    def __init__(self, original_email=None, alumno_obj=None, *args, **kwargs):
         super(AlumnoForm, self).__init__(*args, **kwargs)
         self.original_email = original_email
+        # Si estamos editando (se pasa alumno_obj), pre-llenamos el checkbox
+        # basándonos en la propiedad dinámica, no en una columna de la BD.
+        if alumno_obj:
+            self.es_miembro.data = alumno_obj.es_miembro_activo
 
     def validate_email(self, email):
         if email.data.lower() != self.original_email:
@@ -161,3 +167,7 @@ class CursoForm(FlaskForm):
     ])
     modulos = FieldList(FormField(ModuloForm), min_entries=1, label='Temario del Curso')
     submit = SubmitField('Guardar Cambios')
+
+class DeleteForm(FlaskForm):
+    """Formulario simple solo para la acción de eliminar con protección CSRF."""
+    submit = SubmitField('Eliminar')
