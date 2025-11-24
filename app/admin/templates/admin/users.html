@@ -92,9 +92,36 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <div class="btn-group btn-group-sm">
-                                                <button class="btn btn-outline-primary" title="Editar (Próximamente)" disabled>
-                                                    <i class="fas fa-edit"></i>
+                                            <!-- BOTÓN EDITAR (AHORA FUNCIONAL) -->
+                                            <a href="{{ url_for('admin.editar_usuario', user_id=user.id) }}" class="btn btn-sm btn-outline-primary" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+
+                                            <!-- BOTÓN ELIMINAR CON MODAL DE CONFIRMACIÓN -->
+                                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal-{{ user.id }}" title="Eliminar" {% if user.id == current_user.id %}disabled{% endif %}>
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+
+                                            <!-- Modal de Confirmación de Borrado -->
+                                            <div class="modal fade" id="deleteUserModal-{{ user.id }}" tabindex="-1" aria-labelledby="deleteUserModalLabel-{{ user.id }}" aria-hidden="true">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title" id="deleteUserModalLabel-{{ user.id }}">Confirmar Eliminación</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            ¿Estás seguro de que quieres eliminar al administrador <strong>{{ user.username }}</strong>? Esta acción no se puede deshacer.
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                            <form action="{{ url_for('admin.eliminar_usuario', user_id=user.id) }}" method="POST" class="d-inline">
+                                                                <button type="submit" class="btn btn-danger">Sí, Eliminar</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                                 </button>
                                             </div>
                                         </td>

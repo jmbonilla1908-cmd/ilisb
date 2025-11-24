@@ -100,9 +100,15 @@ def nuevo_usuario():
     """Crear un nuevo usuario administrador."""
     form = AdminUserForm()
     if form.validate_on_submit():
+        # Dividimos el nombre completo en nombre y apellido
+        full_name_parts = form.full_name.data.split(' ', 1)
+        first_name = full_name_parts[0]
+        last_name = full_name_parts[1] if len(full_name_parts) > 1 else ''
+
         user = User(
             username=form.username.data,
-            full_name=form.full_name.data,
+            first_name=first_name,
+            last_name=last_name,
             email=form.email.data,
             is_active=form.is_active.data,
             is_superuser=form.is_superuser.data
@@ -117,6 +123,57 @@ def nuevo_usuario():
             db.session.rollback()
             flash(f'Error al crear el usuario: {e}', 'danger')
     return render_template('admin/form_user.html', title='Nuevo Administrador', form=form)
+
+@bp.route('/user/<int:user_id>/edit', methods=['GET', 'POST'])
+@superuser_required
+def editar_usuario(user_id):
+    """Editar un usuario administrador."""
+    user = User.query.get_or_404(user_id)
+    # Pasamos el objeto original para que el validador de unicidad funcione correctamente
+    form = AdminUserForm(obj=user, original_username=user.username, original_email=user.email)
+
+    if form.validate_on_submit():
+        # Dividimos el nombre completo en nombre y apellido
+        full_name_parts = form.full_name.data.split(' ', 1)
+        user.first_name = full_name_parts[0]
+        user.last_name = full_name_parts[1] if len(full_name_parts) > 1 else ''
+
+        user.username = form.username.data
+        user.email = form.email.data
+        user.is_active = form.is_active.data
+        
+        # Solo un superadmin puede cambiar el status de superadmin
+        # y no puede quitarse el superadmin a sí mismo
+        if current_user.is_superuser and current_user.id != user.id:
+            user.is_superuser = form.is_superuser.data
+
+        # Actualizar contraseña solo si se proporciona una nueva
+        if form.password.data:
+            user.set_password(form.password.data)
+        
+        try:
+            db.session.commit()
+            flash(f'Usuario "{user.username}" actualizado exitosamente.', 'success')
+            return redirect(url_for('admin.users'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al actualizar el usuario: {e}', 'danger')
+
+    return render_template('admin/form_user.html', title=f'Editar: {user.username}', form=form, user=user)
+
+@bp.route('/user/<int:user_id>/delete', methods=['POST'])
+@superuser_required
+def eliminar_usuario(user_id):
+    """Eliminar un usuario administrador."""
+    if user_id == current_user.id:
+        flash('No puedes eliminar tu propia cuenta.', 'danger')
+        return redirect(url_for('admin.users'))
+        
+    user = User.query.get_or_404(user_id)
+    db.session.delete(user)
+    db.session.commit()
+    flash(f'Usuario "{user.username}" eliminado exitosamente.', 'success')
+    return redirect(url_for('admin.users'))
 
 @bp.route('/cursos')
 @admin_required
