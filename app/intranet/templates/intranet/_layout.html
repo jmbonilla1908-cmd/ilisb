@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-3">
+            <!-- Menú de Navegación de la Intranet -->
+            <div class="list-group">
+                <a href="{{ url_for('intranet.dashboard') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'intranet.dashboard' %}active{% endif %}">Dashboard</a>
+                <a href="{{ url_for('intranet.mis_cursos') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'intranet.mis_cursos' %}active{% endif %}">Mis Cursos</a>
+                <a href="{{ url_for('intranet.mis_datos') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'intranet.mis_datos' %}active{% endif %}">Mis Datos</a>
+                <a href="{{ url_for('intranet.configuracion') }}" class="list-group-item list-group-item-action {% if request.endpoint == 'intranet.configuracion' %}active{% endif %}">Configuración</a>
+            </div>
+        </div>
+        <div class="col-md-9">
+            {% block intranet_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}

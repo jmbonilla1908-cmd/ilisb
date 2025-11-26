@@ -1,0 +1,11 @@
+{% extends "auth/_form_layout.html" %}
+{% from "_form_helpers.html" import render_field %}
+
+{% block form_fields %}
+    {{ render_field(form.new_email, class="form-control") }}
+    {{ render_field(form.password, class="form-control mt-2") }}
+{% endblock %}
+
+{% block before_form %}
+    <p class="text-muted">Se enviará un enlace de confirmación a tu nueva dirección de correo para verificar que te pertenece.</p>
+{% endblock %}

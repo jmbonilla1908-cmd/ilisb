@@ -1,13 +1,11 @@
-{% extends "base.html" %}
+{% extends "intranet/_layout.html" %}
 
-{% block content %}
-<div class="container mt-4">
-    <div class="row mb-4">
-        <div class="col-12">
-            <h2>Bienvenido, {{ current_user.nombres }}</h2>
-            <p class="lead">Este es tu panel de control.</p>
-        </div>
+{% block intranet_content %}
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Bienvenido, {{ current_user.nombres }}</h1>
     </div>
+
+    <p class="lead mb-4">Este es tu panel de control.</p>
 
     <div class="row g-4">
         <!-- Columna Principal -->
@@ -80,5 +78,4 @@
             </div>
         </div>
     </div>
-</div>
 {% endblock %}

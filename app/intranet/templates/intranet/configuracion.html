@@ -1,28 +1,23 @@
-{% extends "base.html" %}
+{% extends "intranet/_layout.html" %}
 {% from '_form_helpers.html' import render_field %}
 
-{% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h3>{{ title }}</h3>
+{% block intranet_content %}
+    <h1 class="mb-4">{{ title }}</h1>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Preferencias del Dashboard</h6>
+        </div>
+        <div class="card-body">
+            <form method="POST" novalidate>
+                {{ form.hidden_tag() }}
+                {{ render_field(form.mostrar_proximos_cursos) }}
+                {{ render_field(form.mostrar_calendario) }}
+                {{ render_field(form.mostrar_certificados) }}
+                {{ render_field(form.tema_preferido, class="form-select") }}
+                <div class="d-flex justify-content-end mt-4">
+                    {{ form.submit(class="btn btn-primary") }}
                 </div>
-                <div class="card-body">
-                    <form method="POST" novalidate>
-                        {{ form.hidden_tag() }}
-                        {{ render_field(form.mostrar_proximos_cursos) }}
-                        {{ render_field(form.mostrar_calendario) }}
-                        {{ render_field(form.mostrar_certificados) }}
-                        {{ render_field(form.tema_preferido, class="form-select") }}
-                        <div class="d-flex justify-content-end mt-4">
-                            {{ form.submit(class="btn btn-primary") }}
-                        </div>
-                    </form>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
-</div>
 {% endblock %}

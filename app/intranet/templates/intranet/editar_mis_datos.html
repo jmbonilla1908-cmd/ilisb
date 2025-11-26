@@ -1,0 +1,26 @@
+{% extends "intranet/_layout.html" %}
+{% from "_form_helpers.html" import render_field %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block intranet_content %}
+    <h1 class="mb-4">{{ title }}</h1>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Actualiza tu Información</h6>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="">
+                {{ form.hidden_tag() }}
+                {{ render_field(form.nombres, class="form-control") }}
+                {{ render_field(form.apellidos, class="form-control mt-2") }}
+                {{ render_field(form.telefono, class="form-control mt-2") }}
+                <hr>
+                <div class="d-flex justify-content-end">
+                    <a href="{{ url_for('intranet.mis_datos') }}" class="btn btn-secondary me-2">Cancelar</a>
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

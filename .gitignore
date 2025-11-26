@@ -15,6 +15,10 @@ __pycache__/
 # Archivos de variables de entorno
 .env
 .env.*
+.flaskenv
+requirements-dev.txt
+Procfile
+run_dev.sh
 
 # Archivos de sistema operativo
 .DS_Store

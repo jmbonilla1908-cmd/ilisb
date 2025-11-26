@@ -2,6 +2,8 @@ from app import db, login_manager
 from flask_login import UserMixin
 from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask import current_app
+from itsdangerous import URLSafeTimedSerializer as Serializer
 
 
 # Esta función es requerida por Flask-Login para cargar un usuario desde la sesión
@@ -77,6 +79,39 @@ class Alumno(UserMixin, db.Model):
 
     def get_id(self):
         return f'alumno_{self.id}'
+
+    def get_reset_token(self, expires_sec=1800):
+        """Genera un token seguro para restaurar la contraseña."""
+        s = Serializer(current_app.config['SECRET_KEY'])
+        return s.dumps({'alumno_id': self.id})
+
+    @staticmethod
+    def verify_reset_token(token, expires_sec=1800):
+        """Verifica el token de restauración y devuelve el Alumno si es válido."""
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token, max_age=expires_sec)
+            alumno_id = data.get('alumno_id')
+        except Exception:
+            return None
+        return Alumno.query.get(alumno_id)
+
+    def get_email_change_token(self, new_email, expires_sec=1800):
+        """Genera un token seguro para el cambio de email."""
+        s = Serializer(current_app.config['SECRET_KEY'])
+        return s.dumps({'alumno_id': self.id, 'new_email': new_email})
+
+    @staticmethod
+    def verify_email_change_token(token, expires_sec=1800):
+        """Verifica el token de cambio de email y devuelve el Alumno y el nuevo email."""
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token, max_age=expires_sec)
+            alumno_id = data.get('alumno_id')
+            new_email = data.get('new_email')
+        except Exception:
+            return None, None
+        return Alumno.query.get(alumno_id), new_email
 
     @property
     def membresia_activa_obj(self):

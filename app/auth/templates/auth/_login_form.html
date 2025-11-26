@@ -17,7 +17,7 @@
             <div class="d-grid">{{ form.submit(class="btn btn-primary") }}</div>
         </form>
         <hr>
-        <p class="small"><a href="#">He olvidado mi contraseña</a></p>
+        <p class="small"><a href="{{ url_for('auth.reset_request') }}">He olvidado mi contraseña</a></p>
         <p class="small">Si aún no tienes cuenta, <a href="{{ url_for('auth.register') }}">regrístrate gratis</a>.</p>
     </div>
 </div>

@@ -1,0 +1,6 @@
+{% extends "auth/_form_layout.html" %}
+{% from "_form_helpers.html" import render_field %}
+
+{% block form_fields %}
+    {{ render_field(form.email, class="form-control") }}
+{% endblock %}

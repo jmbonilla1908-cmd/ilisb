@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .button {
+            background-color: #0d6efd; color: white; padding: 12px 25px;
+            text-align: center; text-decoration: none; display: inline-block;
+            font-size: 16px; margin: 4px 2px; cursor: pointer; border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Confirma tu nueva dirección de correo</h2>
+    <p>Hola {{ alumno.nombres }},</p>
+    <p>Para completar el cambio de tu dirección de correo electrónico, por favor haz clic en el siguiente botón:</p>
+    <a href="{{ url_for('auth.change_email_token', token=token, _external=True) }}" class="button">Confirmar Nuevo Correo</a>
+    <p>Este enlace de confirmación expirará en 30 minutos.</p>
+    <p>Si no solicitaste este cambio, puedes ignorar este mensaje de forma segura.</p>
+    <hr>
+    <p><small>Atentamente,<br>El equipo de ILISB</small></p>
+</body>
+</html>

@@ -2,7 +2,7 @@ from flask import render_template, request, jsonify, redirect, url_for, flash
 from flask_login import login_required, current_user
 from app.auth.decorators import student_required
 from app.intranet import intranetModule
-from .models import IntranetDashboard, ActividadAlumno
+from .models import IntranetDashboard, ActividadAlumno # type: ignore
 from .forms import DashboardConfigForm
 from app.matriculas.models import AlumnoGrupo
 from app.auth.models import AlumnoMembresia  # Corregido: Importar desde auth.models
@@ -10,6 +10,7 @@ from app.cursos.models import Grupo, Sesion
 from sqlalchemy import desc
 from app import db
 from datetime import datetime, timedelta
+from app.auth.forms import ChangeUserDataForm
 
 
 @intranetModule.route('/dashboard')
@@ -135,8 +136,31 @@ def mis_cursos():
 @login_required
 @student_required
 def mis_datos():
-    """Página para que el alumno vea y edite sus datos personales."""
+    """Página para que el alumno vea sus datos personales."""
     return render_template('intranet/mis_datos.html', title='Mis Datos')
+
+
+@intranetModule.route('/mis-datos/editar', methods=['GET', 'POST'])
+@login_required
+@student_required
+def editar_mis_datos():
+    """Formulario para que el alumno edite sus datos personales."""
+    form = ChangeUserDataForm(obj=current_user)
+    if form.validate_on_submit():
+        current_user.nombres = form.nombres.data
+        current_user.apellidos = form.apellidos.data
+        current_user.telefono = form.telefono.data
+        try:
+            db.session.commit()
+            flash('Tus datos han sido actualizados exitosamente.', 'success')
+            return redirect(url_for('intranet.mis_datos'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al actualizar tus datos: {e}', 'danger')
+
+    return render_template('intranet/editar_mis_datos.html',
+                           title='Editar Mis Datos',
+                           form=form)
 
 
 @intranetModule.route('/configuracion', methods=['GET', 'POST'])
