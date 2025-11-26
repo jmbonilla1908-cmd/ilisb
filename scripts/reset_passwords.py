@@ -23,8 +23,16 @@ emails_to_update = [
 # La nueva contraseña que se asignará a todos
 new_password = "9QCJjw2g1980gMz"
 
+# Lee la variable de entorno FLASK_CONFIG y la mapea a la clase de configuración correcta.
+config_name = os.getenv('FLASK_CONFIG', 'development')
+config_map = {
+    'development': 'config.DevelopmentConfig',
+    'production': 'config.ProductionConfig'
+}
+config_string = config_map.get(config_name, 'config.DevelopmentConfig')
+
 # Crea una instancia de la aplicación Flask para tener el contexto correcto
-app = create_app(os.getenv('FLASK_CONFIG') or 'development')
+app = create_app(config_string)
 
 with app.app_context():
     print("--- Iniciando script de reseteo de contraseñas ---")
