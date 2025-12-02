@@ -263,13 +263,37 @@ def editar_curso(slug):
     ).filter_by(slug=slug).first_or_404()
 
     # Si el formulario no se está enviando, lo pre-poblamos con los datos de la BD
-    if not request.form:
+    if request.method == 'GET':
         form = CursoForm(obj=curso)
         # Si el curso no tiene módulos, añadimos uno vacío para que la plantilla lo renderice.
         if not form.modulos.entries:
             form.modulos.append_entry()
     else:
-        form = CursoForm()
+        # Para peticiones POST, creamos el form a partir de los datos recibidos
+        form = CursoForm(request.form)
+
+    # --- Lógica para añadir/eliminar dinámicamente Módulos e Ítems ---
+    action = request.form.get('action')
+    if action:
+        if action == 'add_modulo':
+            form.modulos.append_entry()
+        elif action.startswith('remove_modulo_'):
+            index = int(action.split('_')[-1])
+            if 0 <= index < len(form.modulos.entries):
+                del form.modulos.entries[index]
+        elif action.startswith('add_item_'):
+            modulo_index = int(action.split('_')[-1])
+            if 0 <= modulo_index < len(form.modulos.entries):
+                form.modulos[modulo_index].items.append_entry()
+        elif action.startswith('remove_item_'):
+            modulo_index, item_index = map(int, action.split('_')[-2:])
+            if 0 <= modulo_index < len(form.modulos.entries) and \
+               0 <= item_index < len(form.modulos[modulo_index].items.entries):
+                del form.modulos[modulo_index].items.entries[item_index]
+
+        # Devolvemos la plantilla con el formulario modificado, sin validar ni guardar
+        return render_template('admin/form_curso.html', title=f'Editar: {curso.nombre}', form=form, curso=curso)
+    # --- Fin de la lógica dinámica ---
 
     if form.validate_on_submit():
         # Rellena el objeto 'curso' con los datos validados del formulario
